@@ -18,9 +18,12 @@ function Dashboard() {
         <p>Email: {user?.email}</p>
         <p>Role: {user?.role}</p>
 
-        <div className="d-flex gap-2 mt-3">
+        <div className="d-flex gap-2 mt-3 flex-wrap">
           <Link to="/internships" className="btn btn-dark">
             Explore Internships
+          </Link>
+          <Link to="/my-purchases" className="btn btn-success">
+            My Purchases
           </Link>
           <button onClick={handleLogout} className="btn btn-danger">
             Logout

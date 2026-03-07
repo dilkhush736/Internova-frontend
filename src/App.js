@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Internships from "./pages/Internships";
 import InternshipDetails from "./pages/InternshipDetails";
+import MyPurchases from "./pages/MyPurchases";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -34,6 +35,14 @@ function App() {
           element={
             <ProtectedRoute>
               <InternshipDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-purchases"
+          element={
+            <ProtectedRoute>
+              <MyPurchases />
             </ProtectedRoute>
           }
         />

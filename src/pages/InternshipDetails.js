@@ -51,7 +51,7 @@ function InternshipDetails() {
         key: data.key,
         amount: data.order.amount,
         currency: data.order.currency,
-        name: "Internship Platform",
+        name: "Internova",
         description: `${data.internship.title} - ${data.duration.label}`,
         order_id: data.order.id,
         handler: async function (response) {
@@ -72,7 +72,7 @@ function InternshipDetails() {
 
             if (verifyRes.data.success) {
               alert("Payment successful!");
-              navigate("/dashboard");
+              navigate("/my-purchases");
             } else {
               alert("Payment verification failed");
             }
