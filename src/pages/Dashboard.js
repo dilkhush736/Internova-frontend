@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -18,9 +18,14 @@ function Dashboard() {
         <p>Email: {user?.email}</p>
         <p>Role: {user?.role}</p>
 
-        <button onClick={handleLogout} className="btn btn-danger mt-3">
-          Logout
-        </button>
+        <div className="d-flex gap-2 mt-3">
+          <Link to="/internships" className="btn btn-dark">
+            Explore Internships
+          </Link>
+          <button onClick={handleLogout} className="btn btn-danger">
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );
