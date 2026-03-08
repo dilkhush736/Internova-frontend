@@ -1,0 +1,281 @@
+body {
+  background: linear-gradient(135deg, #f8fafc, #eef2ff, #f8fafc);
+  min-height: 100vh;
+}
+
+/* =========================
+   NAVBAR
+========================= */
+.internova-navbar {
+  background: rgba(11, 23, 54, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(11, 23, 54, 0.18);
+  transition: all 0.35s ease;
+}
+
+.internova-brand {
+  text-decoration: none;
+}
+
+.internova-logo-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #0f172a);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.2rem;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
+  transform: rotate(-8deg);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.internova-brand:hover .internova-logo-circle {
+  transform: rotate(0deg) scale(1.06);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.45);
+}
+
+.brand-main {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.brand-sub {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.74rem;
+  letter-spacing: 0.3px;
+}
+
+.internova-link {
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-weight: 500;
+  padding: 10px 16px !important;
+  border-radius: 999px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.internova-link:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.internova-search-wrap {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  padding: 4px;
+  min-width: 320px;
+  box-shadow: inset 0 0 0 rgba(255,255,255,0);
+  transition: all 0.35s ease;
+}
+
+.internova-search-wrap:hover,
+.internova-search-wrap:focus-within {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.internova-search {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  padding: 10px 14px;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.internova-search::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.internova-search-btn {
+  border: none;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.internova-search-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.35);
+}
+
+.internova-user-pill {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.internova-logout-btn,
+.internova-auth-btn,
+.internova-auth-outline-btn {
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.internova-logout-btn {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+}
+
+.internova-logout-btn:hover {
+  background: #b91c1c;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.internova-auth-btn {
+  background: #fff;
+  color: #0b1736;
+  border: none;
+}
+
+.internova-auth-btn:hover {
+  background: #f8fafc;
+  color: #0b1736;
+  transform: translateY(-1px);
+}
+
+.internova-auth-outline-btn {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.internova-auth-outline-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.internova-toggler {
+  border: none;
+  box-shadow: none !important;
+  filter: invert(1);
+}
+
+/* =========================
+   FOOTER
+========================= */
+.internova-footer {
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), transparent 35%),
+    linear-gradient(135deg, #081126, #0b1736, #111827);
+  color: #fff;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  box-shadow: 0 -10px 30px rgba(11, 23, 54, 0.12);
+}
+
+.footer-logo {
+  width: 42px;
+  height: 42px;
+  font-size: 1rem;
+}
+
+.footer-text {
+  color: rgba(255, 255, 255, 0.74);
+  line-height: 1.8;
+  margin-bottom: 0;
+}
+
+.footer-heading {
+  font-size: 1rem;
+  margin-bottom: 16px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: 10px;
+}
+
+.footer-links a,
+.footer-links span {
+  color: rgba(255, 255, 255, 0.74);
+  text-decoration: none;
+  transition: all 0.28s ease;
+}
+
+.footer-links a:hover {
+  color: #fff;
+  padding-left: 4px;
+}
+
+.internova-footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footer-copy {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.footer-socials {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.footer-socials a {
+  color: rgba(255, 255, 255, 0.74);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.footer-socials a:hover {
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 991px) {
+  .internova-search-wrap {
+    min-width: 100%;
+  }
+
+  .internova-link {
+    margin-bottom: 6px;
+  }
+}
+
+@media (max-width: 767px) {
+  .brand-main {
+    font-size: 1.1rem;
+  }
+
+  .internova-logo-circle {
+    width: 42px;
+    height: 42px;
+  }
+}

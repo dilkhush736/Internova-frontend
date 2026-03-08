@@ -125,46 +125,38 @@ function CertificatePage() {
             )}
 
             {!certificate ? (
-              <button
-                className="btn btn-dark"
-                onClick={handleGenerate}
-                disabled={generating}
-              >
-                {generating ? "Generating..." : "Generate Certificate"}
-              </button>
-            ) : (
-              <div className="mt-3">
-                <div className="alert alert-info">
-                  <p className="mb-1">
-                    <strong>Certificate ID:</strong> {certificate.certificateId}
-                  </p>
-                  <p className="mb-0">
-                    <strong>Issued At:</strong>{" "}
-                    {new Date(certificate.issuedAt).toLocaleString()}
-                  </p>
-                </div>
-
-                <button className="btn btn-success" onClick={handleDownload}>
-                  Download Certificate
-                </button>
-
-                <button
-                  className="btn btn-outline-dark ms-2"
-                  onClick={() => navigate(`/verify/${certificate.certificateId}`)}
-                >
-                  Verify Certificate
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="alert alert-warning mb-0">
-            You are not eligible for certificate yet. Complete 80% progress and pass the mini test.
-          </div>
-        )}
-      </div>
+  <button
+    className="btn btn-dark"
+    onClick={handleGenerate}
+    disabled={generating}
+  >
+    {generating ? "Generating..." : "Generate Certificate"}
+  </button>
+) : (
+  <div className="mt-3">
+    <div className="alert alert-info">
+      <p className="mb-1">
+        <strong>Certificate ID:</strong> {certificate.certificateId}
+      </p>
+      <p className="mb-0">
+        <strong>Issued At:</strong>{" "}
+        {new Date(certificate.issuedAt).toLocaleString()}
+      </p>
     </div>
-  );
-}
+
+    <div className="d-flex gap-2 flex-wrap">
+      <button className="btn btn-success" onClick={handleDownload}>
+        Download Certificate
+      </button>
+
+      <button
+        className="btn btn-outline-dark"
+        onClick={() => navigate(`/verify/${certificate.certificateId}`)}
+      >
+        Verify Certificate
+      </button>
+    </div>
+  </div>
+)}
 
 export default CertificatePage;

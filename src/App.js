@@ -11,10 +11,13 @@ import CourseProgress from "./pages/CourseProgress";
 import QuizPage from "./pages/QuizPage";
 import CertificatePage from "./pages/CertificatePage";
 import VerifyCertificate from "./pages/VerifyCertificate";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 function App() {
   return (
     <BrowserRouter>
+      <Navbar />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -93,6 +96,7 @@ function App() {
           }
         />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }
