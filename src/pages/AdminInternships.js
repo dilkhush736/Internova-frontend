@@ -29,7 +29,7 @@ function AdminInternships() {
   const [formData, setFormData] = useState(initialForm);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const token = localStorage.getItem("token");
   const fetchInternships = async () => {
     try {
       const { data } = await API.get("/internships");
@@ -109,10 +109,18 @@ function AdminInternships() {
       };
 
       if (editingId) {
-        await API.put(`/internships/${editingId}`, payload);
+        await API.put(`/internships/${editingId}`, payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         alert("Internship updated successfully");
       } else {
-        await API.post("/internships", payload);
+        await API.post("/internships", payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         alert("Internship created successfully");
       }
 
@@ -160,7 +168,11 @@ function AdminInternships() {
     if (!ok) return;
 
     try {
-      await API.delete(`/internships/${id}`);
+      await API.delete(`/internships/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       alert("Internship deleted successfully");
       fetchInternships();
     } catch (error) {
@@ -382,8 +394,8 @@ function AdminInternships() {
                 {loading
                   ? "Saving..."
                   : editingId
-                  ? "Update Internship"
-                  : "Create Internship"}
+                    ? "Update Internship"
+                    : "Create Internship"}
               </button>
 
               <button
