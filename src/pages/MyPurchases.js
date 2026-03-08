@@ -116,6 +116,13 @@ function MyPurchases() {
                     >
                       Mini Test
                     </button>
+
+                    <button
+                      className="btn btn-outline-success"
+                      onClick={() => navigate(`/certificate/${item.internshipId?._id}`)}
+                    >
+                      Certificate
+                    </button>
                   </div>
                 </div>
               </div>

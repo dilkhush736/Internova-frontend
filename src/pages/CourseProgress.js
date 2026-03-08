@@ -69,8 +69,12 @@ function CourseProgress() {
 
       <div className="card shadow-sm p-4 mb-4">
         <h2>{internship.title}</h2>
-        <p className="mb-1"><strong>Branch:</strong> {internship.branch}</p>
-        <p className="mb-1"><strong>Category:</strong> {internship.category}</p>
+        <p className="mb-1">
+          <strong>Branch:</strong> {internship.branch}
+        </p>
+        <p className="mb-1">
+          <strong>Category:</strong> {internship.category}
+        </p>
         <p className="mb-3">{internship.description}</p>
 
         <h5>Progress: {progress.progressPercent}%</h5>
@@ -88,14 +92,30 @@ function CourseProgress() {
         </div>
 
         {progress.certificateEligible ? (
-          <div className="alert alert-success mb-0">
+          <div className="alert alert-success">
             Great! You have reached 80% progress and are now eligible for the next step.
           </div>
         ) : (
-          <div className="alert alert-warning mb-0">
+          <div className="alert alert-warning">
             Complete at least 80% of modules to become certificate-eligible.
           </div>
         )}
+
+        <div className="d-flex gap-2 flex-wrap">
+          <button
+            className="btn btn-dark"
+            onClick={() => navigate(`/quiz/${internshipId}`)}
+          >
+            Open Mini Test
+          </button>
+
+          <button
+            className="btn btn-success"
+            onClick={() => navigate(`/certificate/${internshipId}`)}
+          >
+            Final Certificate
+          </button>
+        </div>
       </div>
 
       <div className="card shadow-sm p-4">
@@ -135,12 +155,5 @@ function CourseProgress() {
     </div>
   );
 }
-
-<button
-  className="btn btn-dark mt-3"
-  onClick={() => navigate(`/quiz/${internshipId}`)}
->
-  Open Mini Test
-</button>
 
 export default CourseProgress;

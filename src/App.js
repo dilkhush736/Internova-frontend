@@ -9,6 +9,7 @@ import MyPurchases from "./pages/MyPurchases";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CourseProgress from "./pages/CourseProgress";
 import QuizPage from "./pages/QuizPage";
+import CertificatePage from "./pages/CertificatePage";
 
 function App() {
   return (
@@ -58,6 +59,15 @@ function App() {
           element={
             <ProtectedRoute>
               <CourseProgress />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/certificate/:internshipId"
+          element={
+            <ProtectedRoute>
+              <CertificatePage />
             </ProtectedRoute>
           }
         />
