@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import CourseProgress from "./pages/CourseProgress";
 import QuizPage from "./pages/QuizPage";
 import CertificatePage from "./pages/CertificatePage";
+import VerifyCertificate from "./pages/VerifyCertificate";
 
 function App() {
   return (
@@ -69,6 +70,17 @@ function App() {
             <ProtectedRoute>
               <CertificatePage />
             </ProtectedRoute>
+          }
+        />
+
+        <Route path="/verify"
+          element={
+            <VerifyCertificate />
+          }
+        />
+        <Route path="/verify/:certificateId"
+          element={
+            <VerifyCertificate />
           }
         />
 

@@ -147,6 +147,13 @@ function CertificatePage() {
                 <button className="btn btn-success" onClick={handleDownload}>
                   Download Certificate
                 </button>
+
+                <button
+                  className="btn btn-outline-dark ms-2"
+                  onClick={() => navigate(`/verify/${certificate.certificateId}`)}
+                >
+                  Verify Certificate
+                </button>
               </div>
             )}
           </>
