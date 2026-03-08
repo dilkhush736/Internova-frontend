@@ -13,6 +13,8 @@ import CertificatePage from "./pages/CertificatePage";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import AdminInternships from "./pages/AdminInternships";
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
   return (
@@ -86,7 +88,14 @@ function App() {
             <VerifyCertificate />
           }
         />
-
+        <Route
+          path="/admin/internships"
+          element={
+            <AdminRoute>
+              <AdminInternships />
+            </AdminRoute>
+          }
+        />
         <Route
           path="/quiz/:internshipId"
           element={
