@@ -1,16 +1,30 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
 import { useNavigate } from "react-router-dom";
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
 
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
 
 function MyPurchases() {
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState(null);
+  const [toast, setToast] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
 
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
+
+  const showToast = (type, message) => {
+    setToast({ show: true, type, message });
+
+    setTimeout(() => {
+      setToast({ show: false, type: "success", message: "" });
+    }, 3000);
+  };
 
   const fetchPurchases = async () => {
     try {
@@ -23,6 +37,7 @@ function MyPurchases() {
       setPurchases(data.purchases || []);
     } catch (error) {
       console.error("Failed to fetch purchases:", error);
+      showToast("error", "Failed to fetch purchases");
     } finally {
       setLoading(false);
     }
@@ -70,10 +85,12 @@ function MyPurchases() {
       a.click();
       a.remove();
 
+      showToast("success", "Offer letter downloaded successfully");
+
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error(error);
-      alert("Offer letter download failed");
+      showToast("error", "Offer letter download failed");
     } finally {
       setDownloadingId(null);
     }
@@ -131,6 +148,42 @@ function MyPurchases() {
       }}
     >
       <div className="container">
+        {toast.show && (
+          <div
+            style={{
+              position: "fixed",
+              top: "24px",
+              right: "24px",
+              zIndex: 9999,
+              minWidth: "280px",
+              maxWidth: "380px",
+            }}
+          >
+            <div
+              className="shadow-lg rounded-4 px-4 py-3"
+              style={{
+                background:
+                  toast.type === "success"
+                    ? "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)"
+                    : "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
+                border:
+                  toast.type === "success"
+                    ? "1px solid #86efac"
+                    : "1px solid #fca5a5",
+              }}
+            >
+              <div
+                className={`fw-bold mb-1 ${
+                  toast.type === "success" ? "text-success" : "text-danger"
+                }`}
+              >
+                {toast.type === "success" ? "Success" : "Error"}
+              </div>
+              <div className="text-dark small">{toast.message}</div>
+            </div>
+          </div>
+        )}
+
         {/* HERO */}
         <div
           className="card border-0 shadow-lg rounded-5 overflow-hidden mb-4"
@@ -169,7 +222,8 @@ function MyPurchases() {
                   <div className="small text-light mb-2">Total Purchases</div>
                   <div className="fw-bold fs-2">{purchases.length}</div>
                   <div className="small text-light mt-2">
-                    Manage all paid internship enrollments and related documents.
+                    Manage all paid internship enrollments and related
+                    documents.
                   </div>
                 </div>
               </div>
@@ -205,7 +259,8 @@ function MyPurchases() {
                   <div
                     className="card border-0 shadow-lg rounded-5 h-100 overflow-hidden"
                     style={{
-                      background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                      background:
+                        "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
                     }}
                   >
                     <div
@@ -242,7 +297,9 @@ function MyPurchases() {
                             <div className="small text-secondary mb-1">
                               Branch
                             </div>
-                            <div className="fw-semibold text-dark">{branch}</div>
+                            <div className="fw-semibold text-dark">
+                              {branch}
+                            </div>
                           </div>
                         </div>
 
@@ -369,7 +426,9 @@ function MyPurchases() {
                           <div className="col-12">
                             <button
                               className="btn btn-outline-success w-100 rounded-4 fw-semibold"
-                              onClick={() => navigate(`/certificate/${internshipId}`)}
+                              onClick={() =>
+                                navigate(`/certificate/${internshipId}`)
+                              }
                             >
                               Certificate Dashboard
                             </button>

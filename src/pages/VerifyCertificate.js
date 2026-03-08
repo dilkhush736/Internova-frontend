@@ -10,12 +10,25 @@ function VerifyCertificate() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [searched, setSearched] = useState(false);
+  const [toast, setToast] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
+
+  const showToast = (type, message) => {
+    setToast({ show: true, type, message });
+
+    setTimeout(() => {
+      setToast({ show: false, type: "success", message: "" });
+    }, 3000);
+  };
 
   const handleVerify = async (customId) => {
     const idToCheck = customId || certificateId;
 
     if (!idToCheck.trim()) {
-      alert("Please enter a certificate ID");
+      showToast("error", "Please enter a certificate ID");
       return;
     }
 
@@ -25,14 +38,28 @@ function VerifyCertificate() {
 
       const { data } = await API.get(`/certificates/verify/${idToCheck.trim()}`);
       setResult(data);
+
+      if (data?.verified) {
+        showToast("success", "Certificate verified successfully");
+      } else {
+        showToast(
+          "error",
+          data?.message || "Invalid certificate. Verification failed."
+        );
+      }
     } catch (error) {
       console.error("Verification failed:", error);
+
+      const errorMessage =
+        error.response?.data?.message || "Certificate verification failed";
+
       setResult({
         success: false,
         verified: false,
-        message:
-          error.response?.data?.message || "Certificate verification failed",
+        message: errorMessage,
       });
+
+      showToast("error", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -56,6 +83,42 @@ function VerifyCertificate() {
       }}
     >
       <div className="container">
+        {toast.show && (
+          <div
+            style={{
+              position: "fixed",
+              top: "24px",
+              right: "24px",
+              zIndex: 9999,
+              minWidth: "280px",
+              maxWidth: "380px",
+            }}
+          >
+            <div
+              className="shadow-lg rounded-4 px-4 py-3"
+              style={{
+                background:
+                  toast.type === "success"
+                    ? "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)"
+                    : "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
+                border:
+                  toast.type === "success"
+                    ? "1px solid #86efac"
+                    : "1px solid #fca5a5",
+              }}
+            >
+              <div
+                className={`fw-bold mb-1 ${
+                  toast.type === "success" ? "text-success" : "text-danger"
+                }`}
+              >
+                {toast.type === "success" ? "Success" : "Error"}
+              </div>
+              <div className="text-dark small">{toast.message}</div>
+            </div>
+          </div>
+        )}
+
         <button
           className="btn btn-outline-dark rounded-pill px-4 mb-4"
           onClick={() => navigate(-1)}

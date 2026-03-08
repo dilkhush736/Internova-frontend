@@ -13,6 +13,19 @@ function CertificatePage() {
   const [certificate, setCertificate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [toast, setToast] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
+
+  const showToast = (type, message) => {
+    setToast({ show: true, type, message });
+
+    setTimeout(() => {
+      setToast({ show: false, type: "success", message: "" });
+    }, 3000);
+  };
 
   const fetchEligibility = async () => {
     try {
@@ -29,7 +42,10 @@ function CertificatePage() {
       }
     } catch (error) {
       console.error("Eligibility error:", error);
-      alert(error.response?.data?.message || "Failed to check eligibility");
+      showToast(
+        "error",
+        error.response?.data?.message || "Failed to check eligibility"
+      );
       navigate("/my-purchases");
     } finally {
       setLoading(false);
@@ -57,10 +73,13 @@ function CertificatePage() {
 
       setCertificate(data.certificate);
       await fetchEligibility();
-      alert("Certificate generated successfully!");
+      showToast("success", "Certificate generated successfully!");
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to generate certificate");
+      showToast(
+        "error",
+        error.response?.data?.message || "Failed to generate certificate"
+      );
     } finally {
       setGenerating(false);
     }
@@ -99,11 +118,11 @@ function CertificatePage() {
       document.body.appendChild(a);
       a.click();
       a.remove();
-
+      showToast("success", "Certificate downloaded successfully");
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error(error);
-      alert("Certificate download failed");
+      showToast("error", "Certificate download failed");
     }
   };
 
@@ -137,6 +156,41 @@ function CertificatePage() {
       }}
     >
       <div className="container">
+        {toast.show && (
+          <div
+            style={{
+              position: "fixed",
+              top: "24px",
+              right: "24px",
+              zIndex: 9999,
+              minWidth: "280px",
+              maxWidth: "380px",
+            }}
+          >
+            <div
+              className="shadow-lg rounded-4 px-4 py-3"
+              style={{
+                background:
+                  toast.type === "success"
+                    ? "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)"
+                    : "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
+                border:
+                  toast.type === "success"
+                    ? "1px solid #86efac"
+                    : "1px solid #fca5a5",
+              }}
+            >
+              <div
+                className={`fw-bold mb-1 ${toast.type === "success" ? "text-success" : "text-danger"
+                  }`}
+              >
+                {toast.type === "success" ? "Success" : "Error"}
+              </div>
+              <div className="text-dark small">{toast.message}</div>
+            </div>
+          </div>
+        )}
+
         <button
           className="btn btn-outline-dark rounded-pill px-4 mb-4"
           onClick={() => navigate(-1)}
