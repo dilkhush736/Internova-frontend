@@ -30,24 +30,23 @@ function CertificatePage() {
   const fetchEligibility = async () => {
     try {
       const { data } = await API.get(`/certificates/eligibility/${internshipId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
 
-      setEligibility(data);
+setEligibility(data || null);
 
-      if (data?.certificate) {
-        setCertificate(data.certificate);
-      }
+if (data?.certificate) {
+  setCertificate(data.certificate);
+}
     } catch (error) {
-      console.error("Eligibility error:", error);
-      showToast(
-        "error",
-        error.response?.data?.message || "Failed to check eligibility"
-      );
-      navigate("/my-purchases");
-    } finally {
+  console.error("Eligibility error:", error);
+  showToast(
+    "error",
+    error.response?.data?.message || "Failed to check eligibility"
+  );
+} finally {
       setLoading(false);
     }
   };
@@ -86,45 +85,48 @@ function CertificatePage() {
   };
 
   const handleDownload = async () => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/certificates/${certificate.certificateId}/download`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to download certificate");
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/certificates/${certificate.certificateId}/download`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
+    );
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const safeName = (certificate?.candidateName || "candidate")
-        .replace(/[^a-z0-9]/gi, "_")
-        .replace(/_+/g, "_")
-        .replace(/^_|_$/g, "");
-
-      const safeCertificateId = (certificate?.certificateId || "certificate")
-        .replace(/[^a-z0-9-]/gi, "_");
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${safeName}_${safeCertificateId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      showToast("success", "Certificate downloaded successfully");
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error(error);
-      showToast("error", "Certificate download failed");
+    if (!response.ok) {
+      throw new Error("Failed to download certificate");
     }
-  };
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const safeName = (storedUser?.name || "candidate")
+      .replace(/[^a-z0-9]/gi, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "");
+
+    const safeCertificateId = (certificate?.certificateId || "certificate")
+      .replace(/[^a-z0-9-]/gi, "_");
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${safeName}_${safeCertificateId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    showToast("success", "Certificate downloaded successfully");
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(error);
+    showToast("error", "Certificate download failed");
+  }
+};
 
   if (loading) {
     return (
@@ -143,9 +145,9 @@ function CertificatePage() {
     );
   }
 
-  const progressPercent = eligibility?.progress?.progressPercent ?? 0;
-  const testPassed = eligibility?.progress?.testPassed;
-  const finalEligible = eligibility?.progress?.finalEligible;
+const progressPercent = eligibility?.progress?.progressPercent ?? 0;
+const testPassed = eligibility?.progress?.testPassed ?? false;
+const finalEligible = eligibility?.progress?.finalEligible ?? false;
 
   return (
     <div
@@ -249,7 +251,7 @@ function CertificatePage() {
         {/* MAIN CARD */}
         <div className="card border-0 shadow-lg rounded-5 overflow-hidden">
           <div className="card-body p-4 p-md-5">
-            {eligibility?.eligible ? (
+            {finalEligible ? (
               <>
                 <div
                   className="rounded-4 p-4 mb-4"

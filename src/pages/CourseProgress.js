@@ -37,13 +37,12 @@ function CourseProgress() {
       setInternship(data.internship);
       setProgress(data.progress);
     } catch (error) {
-      console.error("Failed to fetch course progress:", error);
-      showToast(
-        "error",
-        error.response?.data?.message || "Failed to load course"
-      );
-      navigate("/my-purchases");
-    } finally {
+  console.error("Failed to fetch course progress:", error);
+  showToast(
+    "error",
+    error.response?.data?.message || "Failed to load course"
+  );
+} finally {
       setLoading(false);
     }
   };

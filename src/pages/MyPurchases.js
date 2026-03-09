@@ -86,10 +86,9 @@ function MyPurchases() {
       a.remove();
 
       showToast("success", "Offer letter downloaded successfully");
-
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error(error);
+      console.error("Offer letter download error:", error);
       showToast("error", "Offer letter download failed");
     } finally {
       setDownloadingId(null);
@@ -153,7 +152,6 @@ function MyPurchases() {
             style={{
               position: "fixed",
               top: "96px",
-              zIndex: 99999,
               right: "24px",
               zIndex: 9999,
               minWidth: "280px",
@@ -174,8 +172,9 @@ function MyPurchases() {
               }}
             >
               <div
-                className={`fw-bold mb-1 ${toast.type === "success" ? "text-success" : "text-danger"
-                  }`}
+                className={`fw-bold mb-1 ${
+                  toast.type === "success" ? "text-success" : "text-danger"
+                }`}
               >
                 {toast.type === "success" ? "Success" : "Error"}
               </div>
@@ -184,7 +183,6 @@ function MyPurchases() {
           </div>
         )}
 
-        {/* HERO */}
         <div
           className="card border-0 shadow-lg rounded-5 overflow-hidden mb-4"
           style={{
@@ -231,7 +229,6 @@ function MyPurchases() {
           </div>
         </div>
 
-        {/* EMPTY STATE */}
         {purchases.length === 0 ? (
           <div className="card border-0 shadow-sm rounded-5">
             <div className="card-body p-5 text-center">
@@ -247,12 +244,15 @@ function MyPurchases() {
         ) : (
           <div className="row g-4">
             {purchases.map((item) => {
+              const internshipObj = item.internshipId || null;
+              const internshipId = internshipObj?._id || item.internshipId || null;
               const internshipTitle =
-                item.internshipTitle || item.internshipId?.title || "N/A";
-              const branch = item.branch || item.internshipId?.branch || "N/A";
-              const category =
-                item.category || item.internshipId?.category || "N/A";
-              const internshipId = item.internshipId || null;
+                item.internshipTitle || internshipObj?.title || "N/A";
+              const branch = item.branch || internshipObj?.branch || "N/A";
+              const category = item.category || internshipObj?.category || "N/A";
+
+              console.log("purchase item:", item);
+              console.log("internshipId:", internshipId);
 
               return (
                 <div className="col-lg-6" key={item._id}>
@@ -396,7 +396,12 @@ function MyPurchases() {
                       <div className="d-grid gap-3">
                         <button
                           className="btn btn-primary btn-lg rounded-4 fw-semibold"
-                          onClick={() => internshipId && navigate(`/course/${internshipId}`)}
+                          onClick={() => {
+                            console.log("Open Course clicked:", internshipId);
+                            if (internshipId) {
+                              navigate(`/course/${internshipId}`);
+                            }
+                          }}
                         >
                           Open Course
                         </button>
@@ -417,7 +422,12 @@ function MyPurchases() {
                           <div className="col-md-6">
                             <button
                               className="btn btn-outline-dark w-100 rounded-4 fw-semibold"
-                              onClick={() => internshipId && navigate(`/quiz/${internshipId}`)}
+                              onClick={() => {
+                                console.log("Mini Test clicked:", internshipId);
+                                if (internshipId) {
+                                  navigate(`/quiz/${internshipId}`);
+                                }
+                              }}
                             >
                               Mini Test
                             </button>
@@ -426,7 +436,15 @@ function MyPurchases() {
                           <div className="col-12">
                             <button
                               className="btn btn-outline-success w-100 rounded-4 fw-semibold"
-                              onClick={() => internshipId && navigate(`/certificate/${internshipId}`)}
+                              onClick={() => {
+                                console.log(
+                                  "Certificate clicked:",
+                                  internshipId
+                                );
+                                if (internshipId) {
+                                  navigate(`/certificate/${internshipId}`);
+                                }
+                              }}
                             >
                               Certificate Dashboard
                             </button>

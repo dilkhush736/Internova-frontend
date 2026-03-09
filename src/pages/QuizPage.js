@@ -48,7 +48,6 @@ function QuizPage() {
         "error",
         error.response?.data?.message || "Failed to load quiz"
       );
-      navigate("/my-purchases");
     } finally {
       setLoading(false);
     }
