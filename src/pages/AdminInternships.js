@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
 
 const makeDuration = () => ({
@@ -71,12 +71,26 @@ function AdminInternships() {
   const [formData, setFormData] = useState(initialForm);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [previewVideo, setPreviewVideo] = useState(null);
 
   const [toast, setToast] = useState({
     show: false,
     type: "success",
     message: "",
   });
+
+  const sortedModulesPreview = useMemo(() => {
+    return reOrderList(
+      (formData.modules || []).map((module) => ({
+        ...module,
+        videos: reOrderList(module.videos || []),
+      }))
+    );
+  }, [formData.modules]);
+
+  const sortedQuizPreview = useMemo(() => {
+    return (formData.quiz || []).filter((q) => q.question?.trim());
+  }, [formData.quiz]);
 
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
@@ -98,6 +112,16 @@ function AdminInternships() {
   useEffect(() => {
     fetchInternships();
   }, []);
+
+  useEffect(() => {
+    if (!previewVideo) {
+      const firstVideo =
+        sortedModulesPreview
+          ?.find((module) => module.videos?.length)
+          ?.videos?.[0] || null;
+      setPreviewVideo(firstVideo);
+    }
+  }, [sortedModulesPreview, previewVideo]);
 
   const handleBasicChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -263,11 +287,17 @@ function AdminInternships() {
     const updated = [...formData.modules];
     if (updated[moduleIndex].videos.length === 1) return;
 
+    const removedVideo = updated[moduleIndex].videos[videoIndex];
     updated[moduleIndex].videos = reOrderList(
       updated[moduleIndex].videos.filter((_, i) => i !== videoIndex)
     );
 
     setFormData((prev) => ({ ...prev, modules: updated }));
+
+    if (previewVideo?.title === removedVideo?.title) {
+      const fallbackVideo = updated[moduleIndex].videos[0] || null;
+      setPreviewVideo(fallbackVideo);
+    }
   };
 
   const moveVideoUp = (moduleIndex, videoIndex) => {
@@ -341,6 +371,7 @@ function AdminInternships() {
   const resetForm = () => {
     setFormData(initialForm);
     setEditingId(null);
+    setPreviewVideo(null);
     showToast("success", "Form reset successfully");
   };
 
@@ -447,7 +478,7 @@ function AdminInternships() {
       const { data } = await API.get(`/internships/${id}`);
       const internship = data.internship;
 
-      setFormData({
+      const nextForm = {
         title: internship.title || "",
         slug: internship.slug || "",
         branch: internship.branch || "",
@@ -507,9 +538,16 @@ function AdminInternships() {
               correctAnswer: Number(q.correctAnswer || 0),
             }))
           : [makeQuizQuestion()],
-      });
+      };
 
+      setFormData(nextForm);
       setEditingId(id);
+
+      const firstPreview =
+        nextForm.modules?.find((module) => module.videos?.length)?.videos?.[0] ||
+        null;
+      setPreviewVideo(firstPreview);
+
       window.scrollTo({ top: 0, behavior: "smooth" });
       showToast("success", "Internship loaded for editing");
     } catch (error) {
@@ -736,6 +774,110 @@ function AdminInternships() {
           flex-wrap: wrap;
         }
 
+        .admin-preview-grid {
+          display: grid;
+          grid-template-columns: 1.1fr 0.9fr;
+          gap: 20px;
+        }
+
+        .admin-preview-card {
+          background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+          border: 1px solid #dbeafe;
+          border-radius: 24px;
+          padding: 20px;
+        }
+
+        .admin-preview-title {
+          font-size: 1.1rem;
+          font-weight: 800;
+          color: #0f172a;
+          margin-bottom: 12px;
+        }
+
+        .admin-preview-module {
+          border: 1px solid #e2e8f0;
+          border-radius: 18px;
+          padding: 14px;
+          background: #fff;
+          margin-bottom: 12px;
+        }
+
+        .admin-preview-module-head {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-bottom: 10px;
+        }
+
+        .admin-preview-video-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .admin-preview-video-btn {
+          width: 100%;
+          text-align: left;
+          border: 1px solid #dbeafe;
+          background: #eff6ff;
+          border-radius: 14px;
+          padding: 10px 12px;
+          font-weight: 600;
+          color: #1e3a8a;
+        }
+
+        .admin-preview-video-btn.active {
+          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+          border-color: #60a5fa;
+        }
+
+        .admin-preview-player-wrap {
+          border-radius: 22px;
+          overflow: hidden;
+          border: 1px solid #dbeafe;
+          background: #0f172a;
+          margin-bottom: 14px;
+        }
+
+        .admin-preview-player {
+          width: 100%;
+          display: block;
+          background: #000;
+        }
+
+        .admin-preview-fallback {
+          border-radius: 18px;
+          border: 1px dashed #cbd5e1;
+          padding: 24px;
+          text-align: center;
+          color: #64748b;
+          background: #f8fafc;
+        }
+
+        .admin-preview-quiz-card {
+          border: 1px solid #e2e8f0;
+          background: #fff;
+          border-radius: 20px;
+          padding: 16px;
+          margin-bottom: 14px;
+        }
+
+        .admin-preview-quiz-option {
+          border: 1px solid #e2e8f0;
+          border-radius: 14px;
+          padding: 10px 12px;
+          background: #f8fafc;
+          margin-bottom: 8px;
+        }
+
+        .admin-preview-quiz-option.correct {
+          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+          border-color: #86efac;
+          color: #065f46;
+          font-weight: 700;
+        }
+
         .admin-list-card {
           border-radius: 28px;
           border: 1px solid rgba(255,255,255,0.45);
@@ -780,6 +922,10 @@ function AdminInternships() {
         @media (max-width: 991px) {
           .admin-hero-title {
             font-size: 1.95rem;
+          }
+
+          .admin-preview-grid {
+            grid-template-columns: 1fr;
           }
         }
 
@@ -842,7 +988,7 @@ function AdminInternships() {
                   <div className="admin-chip">Internova Admin Control Center</div>
                   <h1 className="admin-hero-title">Admin Internship Manager</h1>
                   <p className="admin-hero-text">
-                    Create, edit, organize, and manage internship programs,
+                    Create, edit, organize, preview, and manage internship programs,
                     pricing, modules, videos, and quiz order from one premium
                     admin workspace.
                   </p>
@@ -866,8 +1012,8 @@ function AdminInternships() {
                     </div>
                     <div className="col-12">
                       <div className="admin-stat-card">
-                        <div className="admin-stat-label">Workspace</div>
-                        <h4 className="admin-stat-value">Reorder Ready</h4>
+                        <div className="admin-stat-label">Preview</div>
+                        <h4 className="admin-stat-value">Live</h4>
                       </div>
                     </div>
                   </div>
@@ -1476,6 +1622,128 @@ function AdminInternships() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+
+          <div className="card admin-glass-card border-0 rounded-5 overflow-hidden mb-4">
+            <div className="card-body p-4 p-md-5">
+              <h3 className="admin-section-title">Live Preview</h3>
+              <p className="admin-section-subtitle">
+                Preview course content, video flow, and quiz structure before saving.
+              </p>
+
+              <div className="admin-preview-grid">
+                <div className="admin-preview-card">
+                  <h4 className="admin-preview-title">
+                    Course Preview: {formData.title || "Untitled Program"}
+                  </h4>
+
+                  {sortedModulesPreview.length > 0 ? (
+                    sortedModulesPreview.map((module, moduleIndex) => (
+                      <div className="admin-preview-module" key={moduleIndex}>
+                        <div className="admin-preview-module-head">
+                          <div>
+                            <strong>
+                              Module {module.order}: {module.title || "Untitled Module"}
+                            </strong>
+                            <div className="text-secondary small">
+                              Unlock Day {module.unlockDay}
+                            </div>
+                          </div>
+                          <span className="badge bg-light text-dark border rounded-pill">
+                            {module.videos?.length || 0} Videos
+                          </span>
+                        </div>
+
+                        <div className="admin-preview-video-list">
+                          {(module.videos || []).map((video, videoIndex) => (
+                            <button
+                              type="button"
+                              key={videoIndex}
+                              className={`admin-preview-video-btn ${
+                                previewVideo?.videoUrl === video.videoUrl
+                                  ? "active"
+                                  : ""
+                              }`}
+                              onClick={() => setPreviewVideo(video)}
+                            >
+                              {video.order}. {video.title || "Untitled Video"}{" "}
+                              {video.duration ? `• ${video.duration}` : ""}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="admin-preview-fallback">
+                      No modules available for preview yet.
+                    </div>
+                  )}
+                </div>
+
+                <div className="admin-preview-card">
+                  <h4 className="admin-preview-title">Selected Video Preview</h4>
+
+                  {previewVideo?.videoUrl ? (
+                    <>
+                      <div className="admin-preview-player-wrap">
+                        <video
+                          key={previewVideo.videoUrl}
+                          controls
+                          className="admin-preview-player"
+                          src={previewVideo.videoUrl}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+
+                      <h5 className="fw-bold mb-2">
+                        {previewVideo.title || "Untitled Video"}
+                      </h5>
+                      <p className="text-secondary mb-2">
+                        {previewVideo.description || "No description added yet."}
+                      </p>
+                      <div className="small text-dark">
+                        Duration: <strong>{previewVideo.duration || "N/A"}</strong>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="admin-preview-fallback">
+                      Add a valid video URL to preview playback here.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <h4 className="admin-preview-title">Quiz Preview</h4>
+
+                {sortedQuizPreview.length > 0 ? (
+                  sortedQuizPreview.map((q, qIndex) => (
+                    <div className="admin-preview-quiz-card" key={qIndex}>
+                      <h6 className="fw-bold mb-3">
+                        Q{qIndex + 1}. {q.question}
+                      </h6>
+
+                      {(q.options || []).map((option, oIndex) => (
+                        <div
+                          key={oIndex}
+                          className={`admin-preview-quiz-option ${
+                            q.correctAnswer === oIndex ? "correct" : ""
+                          }`}
+                        >
+                          {option || `Option ${oIndex + 1}`}
+                          {q.correctAnswer === oIndex ? "  • Correct Answer" : ""}
+                        </div>
+                      ))}
+                    </div>
+                  ))
+                ) : (
+                  <div className="admin-preview-fallback">
+                    No quiz questions available for preview yet.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
