@@ -43,76 +43,6 @@ const moveItem = (list, fromIndex, toIndex) => {
   return updated;
 };
 
-const sanitizeImportedData = (data = {}) => {
-  const durations = Array.isArray(data.durations) && data.durations.length
-    ? reOrderList(
-        data.durations.map((d) => ({
-          label: d?.label || "",
-          price: Number(d?.price || 0),
-          durationDays: Number(d?.durationDays || 30),
-        }))
-      )
-    : initialForm.durations;
-
-  const modules = Array.isArray(data.modules) && data.modules.length
-    ? reOrderList(
-        data.modules.map((m, index) => ({
-          title: m?.title || "",
-          description: m?.description || "",
-          unlockDay: Number(m?.unlockDay || index + 1),
-          order: Number(m?.order || index + 1),
-          videos:
-            Array.isArray(m?.videos) && m.videos.length
-              ? reOrderList(
-                  m.videos.map((v, vIndex) => ({
-                    title: v?.title || "",
-                    description: v?.description || "",
-                    videoUrl: v?.videoUrl || "",
-                    duration: v?.duration || "",
-                    order: Number(v?.order || vIndex + 1),
-                  }))
-                )
-              : [makeVideo()],
-        })),
-        (module) => ({
-          ...module,
-          videos: reOrderList(module.videos || []),
-        })
-      )
-    : [makeModule()];
-
-  const quiz = Array.isArray(data.quiz) && data.quiz.length
-    ? data.quiz.map((q) => ({
-        question: q?.question || "",
-        options:
-          Array.isArray(q?.options) && q.options.length === 4
-            ? q.options.map((opt) => opt || "")
-            : ["", "", "", ""],
-        correctAnswer: Number(q?.correctAnswer || 0),
-      }))
-    : [makeQuizQuestion()];
-
-  return {
-    title: data.title || "",
-    slug: data.slug || "",
-    branch: data.branch || "",
-    category: data.category || "",
-    description: data.description || "",
-    thumbnail: data.thumbnail || "",
-    image: data.image || "",
-    requiredProgress: Number(data.requiredProgress || 80),
-    miniTestUnlockProgress: Number(data.miniTestUnlockProgress || 80),
-    miniTestPassMarks: Number(data.miniTestPassMarks || 60),
-    unlockAllPrice: Number(data.unlockAllPrice || 99),
-    certificateEnabled:
-      typeof data.certificateEnabled === "boolean" ? data.certificateEnabled : true,
-    isActive: typeof data.isActive === "boolean" ? data.isActive : true,
-    durations,
-    modules,
-    quiz,
-  };
-};
-
 const initialForm = {
   title: "",
   slug: "",
@@ -136,6 +66,79 @@ const initialForm = {
   quiz: [makeQuizQuestion()],
 };
 
+const sanitizeImportedData = (data = {}) => {
+  const durations =
+    Array.isArray(data.durations) && data.durations.length
+      ? reOrderList(
+          data.durations.map((d) => ({
+            label: d?.label || "",
+            price: Number(d?.price || 0),
+            durationDays: Number(d?.durationDays || 30),
+          }))
+        )
+      : initialForm.durations;
+
+  const modules =
+    Array.isArray(data.modules) && data.modules.length
+      ? reOrderList(
+          data.modules.map((m, index) => ({
+            title: m?.title || "",
+            description: m?.description || "",
+            unlockDay: Number(m?.unlockDay || index + 1),
+            order: Number(m?.order || index + 1),
+            videos:
+              Array.isArray(m?.videos) && m.videos.length
+                ? reOrderList(
+                    m.videos.map((v, vIndex) => ({
+                      title: v?.title || "",
+                      description: v?.description || "",
+                      videoUrl: v?.videoUrl || "",
+                      duration: v?.duration || "",
+                      order: Number(v?.order || vIndex + 1),
+                    }))
+                  )
+                : [makeVideo()],
+          })),
+          (module) => ({
+            ...module,
+            videos: reOrderList(module.videos || []),
+          })
+        )
+      : [makeModule()];
+
+  const quiz =
+    Array.isArray(data.quiz) && data.quiz.length
+      ? data.quiz.map((q) => ({
+          question: q?.question || "",
+          options:
+            Array.isArray(q?.options) && q.options.length === 4
+              ? q.options.map((opt) => opt || "")
+              : ["", "", "", ""],
+          correctAnswer: Number(q?.correctAnswer || 0),
+        }))
+      : [makeQuizQuestion()];
+
+  return {
+    title: data.title || "",
+    slug: data.slug || "",
+    branch: data.branch || "",
+    category: data.category || "",
+    description: data.description || "",
+    thumbnail: data.thumbnail || "",
+    image: data.image || "",
+    requiredProgress: Number(data.requiredProgress || 80),
+    miniTestUnlockProgress: Number(data.miniTestUnlockProgress || 80),
+    miniTestPassMarks: Number(data.miniTestPassMarks || 60),
+    unlockAllPrice: Number(data.unlockAllPrice || 99),
+    certificateEnabled:
+      typeof data.certificateEnabled === "boolean" ? data.certificateEnabled : true,
+    isActive: typeof data.isActive === "boolean" ? data.isActive : true,
+    durations,
+    modules,
+    quiz,
+  };
+};
+
 function AdminInternships() {
   const [internships, setInternships] = useState([]);
   const [formData, setFormData] = useState(initialForm);
@@ -143,7 +146,17 @@ function AdminInternships() {
   const [loading, setLoading] = useState(false);
   const [previewVideo, setPreviewVideo] = useState(null);
 
+  const [thumbnailPreview, setThumbnailPreview] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [branchFilter, setBranchFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+
   const fileInputRef = useRef(null);
+  const thumbnailInputRef = useRef(null);
+  const imageInputRef = useRef(null);
 
   const [toast, setToast] = useState({
     show: false,
@@ -163,6 +176,42 @@ function AdminInternships() {
   const sortedQuizPreview = useMemo(() => {
     return (formData.quiz || []).filter((q) => q.question?.trim());
   }, [formData.quiz]);
+
+  const uniqueBranches = useMemo(() => {
+    const branches = internships.map((item) => item.branch).filter(Boolean);
+    return ["All", ...new Set(branches)];
+  }, [internships]);
+
+  const uniqueCategories = useMemo(() => {
+    const categories = internships.map((item) => item.category).filter(Boolean);
+    return ["All", ...new Set(categories)];
+  }, [internships]);
+
+  const filteredInternships = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return internships.filter((item) => {
+      const matchesSearch =
+        !query ||
+        item.title?.toLowerCase().includes(query) ||
+        item.branch?.toLowerCase().includes(query) ||
+        item.category?.toLowerCase().includes(query) ||
+        item.description?.toLowerCase().includes(query);
+
+      const matchesBranch =
+        branchFilter === "All" || item.branch === branchFilter;
+
+      const matchesCategory =
+        categoryFilter === "All" || item.category === categoryFilter;
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        (statusFilter === "Active" && item.isActive === true) ||
+        (statusFilter === "Inactive" && item.isActive === false);
+
+      return matchesSearch && matchesBranch && matchesCategory && matchesStatus;
+    });
+  }, [internships, searchTerm, branchFilter, categoryFilter, statusFilter]);
 
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
@@ -188,12 +237,19 @@ function AdminInternships() {
   useEffect(() => {
     if (!previewVideo) {
       const firstVideo =
-        sortedModulesPreview
-          ?.find((module) => module.videos?.length)
-          ?.videos?.[0] || null;
+        sortedModulesPreview?.find((module) => module.videos?.length)?.videos?.[0] ||
+        null;
       setPreviewVideo(firstVideo);
     }
   }, [sortedModulesPreview, previewVideo]);
+
+  useEffect(() => {
+    setThumbnailPreview(formData.thumbnail || "");
+  }, [formData.thumbnail]);
+
+  useEffect(() => {
+    setImagePreview(formData.image || "");
+  }, [formData.image]);
 
   const handleBasicChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -212,6 +268,39 @@ function AdminInternships() {
           ? Number(value)
           : value,
     }));
+  };
+
+  const handleLocalImageUpload = (event, fieldName) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("error", "Please select a valid image file");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      setFormData((prev) => ({
+        ...prev,
+        [fieldName]: base64,
+      }));
+
+      if (fieldName === "thumbnail") {
+        setThumbnailPreview(base64);
+      } else {
+        setImagePreview(base64);
+      }
+
+      showToast("success", `${fieldName} uploaded successfully`);
+    };
+
+    reader.onerror = () => {
+      showToast("error", "Failed to read image file");
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const handleDurationChange = (index, field, value) => {
@@ -444,6 +533,8 @@ function AdminInternships() {
     setFormData(initialForm);
     setEditingId(null);
     setPreviewVideo(null);
+    setThumbnailPreview("");
+    setImagePreview("");
     showToast("success", "Form reset successfully");
   };
 
@@ -560,6 +651,9 @@ function AdminInternships() {
         null;
       setPreviewVideo(firstPreview);
 
+      setThumbnailPreview(nextForm.thumbnail || "");
+      setImagePreview(nextForm.image || "");
+
       window.scrollTo({ top: 0, behavior: "smooth" });
       showToast("success", "Internship loaded for editing");
     } catch (error) {
@@ -587,6 +681,9 @@ function AdminInternships() {
         duplicated.modules?.find((module) => module.videos?.length)?.videos?.[0] ||
         null;
       setPreviewVideo(firstPreview);
+
+      setThumbnailPreview(duplicated.thumbnail || "");
+      setImagePreview(duplicated.image || "");
 
       window.scrollTo({ top: 0, behavior: "smooth" });
       showToast("success", "Internship duplicated into form");
@@ -662,6 +759,9 @@ function AdminInternships() {
         null;
       setPreviewVideo(firstPreview);
 
+      setThumbnailPreview(importedForm.thumbnail || "");
+      setImagePreview(importedForm.image || "");
+
       showToast("success", "Internship JSON imported successfully");
     } catch (error) {
       console.error("Import JSON failed:", error);
@@ -671,6 +771,18 @@ function AdminInternships() {
         fileInputRef.current.value = "";
       }
     }
+  };
+
+  const getStatusBadge = (isActive) => {
+    return isActive ? (
+      <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
+        Active
+      </span>
+    ) : (
+      <span className="badge bg-secondary-subtle text-dark border rounded-pill px-3 py-2">
+        Inactive
+      </span>
+    );
   };
 
   return (
@@ -874,6 +986,16 @@ function AdminInternships() {
           flex-wrap: wrap;
         }
 
+        .admin-image-preview {
+          width: 100%;
+          max-width: 220px;
+          height: 140px;
+          object-fit: cover;
+          border-radius: 18px;
+          border: 1px solid #dbeafe;
+          background: #f8fafc;
+        }
+
         .admin-preview-grid {
           display: grid;
           grid-template-columns: 1.1fr 0.9fr;
@@ -978,6 +1100,12 @@ function AdminInternships() {
           font-weight: 700;
         }
 
+        .admin-filter-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr 1fr 1fr;
+          gap: 14px;
+        }
+
         .admin-list-card {
           border-radius: 28px;
           border: 1px solid rgba(255,255,255,0.45);
@@ -1024,7 +1152,8 @@ function AdminInternships() {
             font-size: 1.95rem;
           }
 
-          .admin-preview-grid {
+          .admin-preview-grid,
+          .admin-filter-grid {
             grid-template-columns: 1fr;
           }
         }
@@ -1088,7 +1217,7 @@ function AdminInternships() {
                   <div className="admin-chip">Internova Admin Control Center</div>
                   <h1 className="admin-hero-title">Admin Internship Manager</h1>
                   <p className="admin-hero-text">
-                    Create, edit, preview, duplicate, import, export, and manage
+                    Create, edit, preview, duplicate, import, export, search, and manage
                     internship programs from one premium admin workspace.
                   </p>
                 </div>
@@ -1103,16 +1232,14 @@ function AdminInternships() {
                     </div>
                     <div className="col-6">
                       <div className="admin-stat-card">
-                        <div className="admin-stat-label">Mode</div>
-                        <h4 className="admin-stat-value">
-                          {editingId ? "Edit" : "Create"}
-                        </h4>
+                        <div className="admin-stat-label">Filtered</div>
+                        <h4 className="admin-stat-value">{filteredInternships.length}</h4>
                       </div>
                     </div>
                     <div className="col-12">
                       <div className="admin-stat-card">
                         <div className="admin-stat-label">Tools</div>
-                        <h4 className="admin-stat-value">Import / Export</h4>
+                        <h4 className="admin-stat-value">Search + Upload</h4>
                       </div>
                     </div>
                   </div>
@@ -1230,6 +1357,60 @@ function AdminInternships() {
                       value={formData.image}
                       onChange={handleBasicChange}
                     />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="admin-label">Upload Thumbnail</label>
+                    <div className="admin-inline-actions">
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary admin-action-btn"
+                        onClick={() => thumbnailInputRef.current?.click()}
+                      >
+                        Choose Thumbnail
+                      </button>
+                      <input
+                        ref={thumbnailInputRef}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(e) => handleLocalImageUpload(e, "thumbnail")}
+                      />
+                    </div>
+                    {thumbnailPreview ? (
+                      <img
+                        src={thumbnailPreview}
+                        alt="Thumbnail Preview"
+                        className="admin-image-preview mt-3"
+                      />
+                    ) : null}
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="admin-label">Upload Image</label>
+                    <div className="admin-inline-actions">
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary admin-action-btn"
+                        onClick={() => imageInputRef.current?.click()}
+                      >
+                        Choose Image
+                      </button>
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(e) => handleLocalImageUpload(e, "image")}
+                      />
+                    </div>
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="Image Preview"
+                        className="admin-image-preview mt-3"
+                      />
+                    ) : null}
                   </div>
 
                   <div className="col-md-12">
@@ -1880,15 +2061,63 @@ function AdminInternships() {
             <div className="card-body p-4 p-md-5">
               <h3 className="admin-section-title">Existing Internships</h3>
               <p className="admin-section-subtitle">
-                Review, edit, duplicate, export, or remove existing programs from your admin inventory.
+                Review, edit, duplicate, search, filter, or remove existing programs.
               </p>
 
+              <div className="admin-filter-grid mb-4">
+                <input
+                  type="text"
+                  className="form-control admin-input"
+                  placeholder="Search by title, branch, category, description..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+
+                <select
+                  className="form-select admin-select"
+                  value={branchFilter}
+                  onChange={(e) => setBranchFilter(e.target.value)}
+                >
+                  {uniqueBranches.map((branch, index) => (
+                    <option key={index} value={branch}>
+                      {branch}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  className="form-select admin-select"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                >
+                  {uniqueCategories.map((category, index) => (
+                    <option key={index} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  className="form-select admin-select"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="All">All Status</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+
               <div className="row g-4">
-                {internships.map((item) => (
+                {filteredInternships.map((item) => (
                   <div className="col-md-6" key={item._id}>
                     <div className="admin-list-card">
                       <div className="card-body p-4">
-                        <h4 className="admin-list-title">{item.title}</h4>
+                        <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-2">
+                          <h4 className="admin-list-title mb-0">{item.title}</h4>
+                          <div>{getStatusBadge(item.isActive)}</div>
+                        </div>
+
                         <p className="mb-1">
                           <strong>Branch:</strong> {item.branch}
                         </p>
@@ -1936,12 +2165,11 @@ function AdminInternships() {
                 ))}
               </div>
 
-              {internships.length === 0 && (
+              {filteredInternships.length === 0 && (
                 <div className="admin-empty-card mt-4">
-                  <h5 className="fw-bold mb-2">No Internships Available</h5>
+                  <h5 className="fw-bold mb-2">No Matching Internships</h5>
                   <p className="mb-0">
-                    No internships have been created yet. Start by creating your
-                    first internship program.
+                    No internship matched your current search or filter selection.
                   </p>
                 </div>
               )}
