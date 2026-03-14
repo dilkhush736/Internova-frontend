@@ -154,6 +154,9 @@ function AdminInternships() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
+  const [quickViewItem, setQuickViewItem] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
+
   const fileInputRef = useRef(null);
   const thumbnailInputRef = useRef(null);
   const imageInputRef = useRef(null);
@@ -773,6 +776,60 @@ function AdminInternships() {
     }
   };
 
+  const handleToggleStatus = async (item) => {
+    try {
+      setTogglingId(item._id);
+
+      const payload = sanitizeImportedData({
+        ...item,
+        isActive: !item.isActive,
+      });
+
+      await API.put(`/internships/${item._id}`, payload);
+
+      setInternships((prev) =>
+        prev.map((internship) =>
+          internship._id === item._id
+            ? { ...internship, isActive: !internship.isActive }
+            : internship
+        )
+      );
+
+      if (quickViewItem?._id === item._id) {
+        setQuickViewItem((prev) =>
+          prev ? { ...prev, isActive: !prev.isActive } : prev
+        );
+      }
+
+      showToast(
+        "success",
+        `Internship marked as ${item.isActive ? "inactive" : "active"}`
+      );
+    } catch (error) {
+      console.error("Toggle status failed:", error);
+      showToast(
+        "error",
+        error.response?.data?.message || "Failed to update status"
+      );
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const openQuickView = async (id) => {
+    try {
+      const { data } = await API.get(`/internships/${id}`);
+      setQuickViewItem(data.internship || null);
+    } catch (error) {
+      console.error("Quick view failed:", error);
+      showToast("error", "Failed to open quick view");
+    }
+  };
+
+  const closeQuickView = () => {
+    setQuickViewItem(null);
+  };
+
   const getStatusBadge = (isActive) => {
     return isActive ? (
       <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
@@ -1138,6 +1195,39 @@ function AdminInternships() {
           color: #1e3a8a;
         }
 
+        .admin-modal-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.55);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          z-index: 99998;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 18px;
+        }
+
+        .admin-modal-card {
+          width: min(900px, 100%);
+          max-height: 90vh;
+          overflow-y: auto;
+          background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+          border: 1px solid #dbeafe;
+          border-radius: 28px;
+          box-shadow: 0 30px 80px rgba(15, 23, 42, 0.28);
+          padding: 24px;
+        }
+
+        .admin-modal-image {
+          width: 100%;
+          height: 240px;
+          object-fit: cover;
+          border-radius: 20px;
+          border: 1px solid #dbeafe;
+          background: #f8fafc;
+        }
+
         @keyframes adminFloat {
           0%, 100% {
             transform: translateY(0px) translateX(0px);
@@ -1217,8 +1307,8 @@ function AdminInternships() {
                   <div className="admin-chip">Internova Admin Control Center</div>
                   <h1 className="admin-hero-title">Admin Internship Manager</h1>
                   <p className="admin-hero-text">
-                    Create, edit, preview, duplicate, import, export, search, and manage
-                    internship programs from one premium admin workspace.
+                    Create, edit, preview, duplicate, import, export, search, toggle,
+                    and manage internship programs from one premium admin workspace.
                   </p>
                 </div>
 
@@ -1239,7 +1329,7 @@ function AdminInternships() {
                     <div className="col-12">
                       <div className="admin-stat-card">
                         <div className="admin-stat-label">Tools</div>
-                        <h4 className="admin-stat-value">Search + Upload</h4>
+                        <h4 className="admin-stat-value">Quick View</h4>
                       </div>
                     </div>
                   </div>
@@ -2061,7 +2151,7 @@ function AdminInternships() {
             <div className="card-body p-4 p-md-5">
               <h3 className="admin-section-title">Existing Internships</h3>
               <p className="admin-section-subtitle">
-                Review, edit, duplicate, search, filter, or remove existing programs.
+                Review, edit, duplicate, search, filter, toggle, or remove existing programs.
               </p>
 
               <div className="admin-filter-grid mb-4">
@@ -2153,6 +2243,27 @@ function AdminInternships() {
                           </button>
 
                           <button
+                            className="btn btn-outline-success admin-action-btn"
+                            onClick={() => openQuickView(item._id)}
+                          >
+                            Quick View
+                          </button>
+
+                          <button
+                            className={`btn admin-action-btn ${
+                              item.isActive ? "btn-outline-secondary" : "btn-outline-success"
+                            }`}
+                            onClick={() => handleToggleStatus(item)}
+                            disabled={togglingId === item._id}
+                          >
+                            {togglingId === item._id
+                              ? "Updating..."
+                              : item.isActive
+                              ? "Make Inactive"
+                              : "Make Active"}
+                          </button>
+
+                          <button
                             className="btn btn-danger admin-action-btn"
                             onClick={() => handleDelete(item._id)}
                           >
@@ -2177,6 +2288,185 @@ function AdminInternships() {
           </div>
         </div>
       </div>
+
+      {quickViewItem && (
+        <div className="admin-modal-backdrop" onClick={closeQuickView}>
+          <div
+            className="admin-modal-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
+              <div>
+                <h3 className="fw-bold mb-2">{quickViewItem.title}</h3>
+                <div className="d-flex gap-2 flex-wrap">
+                  {getStatusBadge(quickViewItem.isActive)}
+                  <span className="badge bg-light text-dark border rounded-pill px-3 py-2">
+                    {quickViewItem.branch || "N/A"}
+                  </span>
+                  <span className="badge bg-light text-dark border rounded-pill px-3 py-2">
+                    {quickViewItem.category || "N/A"}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                className="btn btn-outline-dark admin-action-btn"
+                onClick={closeQuickView}
+              >
+                Close
+              </button>
+            </div>
+
+            {(quickViewItem.thumbnail || quickViewItem.image) && (
+              <img
+                src={quickViewItem.thumbnail || quickViewItem.image}
+                alt={quickViewItem.title}
+                className="admin-modal-image mb-4"
+              />
+            )}
+
+            <div className="row g-4 mb-4">
+              <div className="col-md-6">
+                <div className="admin-sub-card h-100">
+                  <h5 className="admin-mini-title">Program Summary</h5>
+                  <p className="mb-2">
+                    <strong>Slug:</strong> {quickViewItem.slug || "N/A"}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Required Progress:</strong>{" "}
+                    {quickViewItem.requiredProgress || 80}%
+                  </p>
+                  <p className="mb-2">
+                    <strong>Mini Test Unlock:</strong>{" "}
+                    {quickViewItem.miniTestUnlockProgress || 80}%
+                  </p>
+                  <p className="mb-2">
+                    <strong>Mini Test Pass Marks:</strong>{" "}
+                    {quickViewItem.miniTestPassMarks || 60}%
+                  </p>
+                  <p className="mb-0">
+                    <strong>Unlock All Price:</strong> ₹
+                    {quickViewItem.unlockAllPrice || 99}
+                  </p>
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <div className="admin-sub-card h-100">
+                  <h5 className="admin-mini-title">Counts</h5>
+                  <p className="mb-2">
+                    <strong>Durations:</strong>{" "}
+                    {quickViewItem.durations?.length || 0}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Modules:</strong>{" "}
+                    {quickViewItem.modules?.length || 0}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Total Videos:</strong>{" "}
+                    {(quickViewItem.modules || []).reduce(
+                      (sum, module) => sum + (module.videos?.length || 0),
+                      0
+                    )}
+                  </p>
+                  <p className="mb-0">
+                    <strong>Quiz Questions:</strong>{" "}
+                    {quickViewItem.quiz?.length || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="admin-sub-card mb-4">
+              <h5 className="admin-mini-title">Description</h5>
+              <p className="mb-0 text-secondary">
+                {quickViewItem.description || "No description available."}
+              </p>
+            </div>
+
+            <div className="admin-sub-card mb-4">
+              <h5 className="admin-mini-title">Durations</h5>
+              <div className="row g-3">
+                {(quickViewItem.durations || []).map((duration, index) => (
+                  <div className="col-md-4" key={index}>
+                    <div className="border rounded-4 p-3 bg-white h-100">
+                      <div className="fw-bold">{duration.label}</div>
+                      <div className="text-secondary small">
+                        ₹{duration.price} • {duration.durationDays} days
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="admin-sub-card mb-4">
+              <h5 className="admin-mini-title">Modules & Videos</h5>
+              {(quickViewItem.modules || []).length > 0 ? (
+                (quickViewItem.modules || []).map((module, index) => (
+                  <div key={index} className="border rounded-4 p-3 bg-white mb-3">
+                    <div className="fw-bold mb-1">
+                      Module {module.order || index + 1}: {module.title}
+                    </div>
+                    <div className="text-secondary small mb-2">
+                      Unlock Day {module.unlockDay || index + 1}
+                    </div>
+
+                    <div className="d-flex flex-column gap-2">
+                      {(module.videos || []).map((video, videoIndex) => (
+                        <div
+                          key={videoIndex}
+                          className="border rounded-3 px-3 py-2 bg-light"
+                        >
+                          <strong>
+                            {video.order || videoIndex + 1}. {video.title}
+                          </strong>
+                          {video.duration ? (
+                            <span className="text-secondary small">
+                              {" "}
+                              • {video.duration}
+                            </span>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="mb-0 text-secondary">No modules available.</p>
+              )}
+            </div>
+
+            <div className="admin-sub-card">
+              <h5 className="admin-mini-title">Quiz Questions</h5>
+              {(quickViewItem.quiz || []).length > 0 ? (
+                (quickViewItem.quiz || []).map((q, qIndex) => (
+                  <div key={qIndex} className="border rounded-4 p-3 bg-white mb-3">
+                    <div className="fw-bold mb-2">
+                      Q{qIndex + 1}. {q.question}
+                    </div>
+                    {(q.options || []).map((option, oIndex) => (
+                      <div
+                        key={oIndex}
+                        className={`border rounded-3 px-3 py-2 mb-2 ${
+                          q.correctAnswer === oIndex
+                            ? "bg-success-subtle border-success"
+                            : "bg-light"
+                        }`}
+                      >
+                        {option}
+                        {q.correctAnswer === oIndex ? " • Correct" : ""}
+                      </div>
+                    ))}
+                  </div>
+                ))
+              ) : (
+                <p className="mb-0 text-secondary">No quiz available.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
