@@ -215,6 +215,26 @@ function CourseProgress() {
     }
   };
 
+const handleTrackedProgress = async (percent) => {
+  if (!selectedVideo || !selectedModule || !internshipId) return;
+
+  try {
+    const response = await updateVideoProgress(internshipId, {
+      moduleId: selectedModule.id || selectedModule._id,
+      videoId: selectedVideo.id,
+      watchedPercent: percent,
+    });
+
+    if (!response?.success) {
+      throw new Error(response?.message || "Failed to update tracked progress");
+    }
+
+    setModules((prev) => markVideoProgress(prev, selectedVideo.id, percent));
+  } catch (error) {
+    console.error("Tracked progress update failed:", error);
+  }
+};
+
   const handleMarkDemoProgress = async (percent) => {
     if (!selectedVideo || !selectedModule || !internshipId) return;
 
@@ -381,19 +401,20 @@ function CourseProgress() {
           />
 
           <VideoPlayerSection
-            selectedModule={selectedModule}
-            selectedVideo={selectedVideo}
-            onPreviousVideo={handlePreviousVideo}
-            onNextVideo={handleNextVideo}
-            onMarkDemoProgress={handleMarkDemoProgress}
-            onVideoEnded={handleVideoEnded}
-            hasPreviousVideo={
-              derivedData?.allUnlockedVideos?.findIndex(
-                (item) => item.video.id === selectedVideo?.id
-              ) > 0
-            }
-            hasNextVideo={Boolean(derivedData?.nextVideoItem)}
-          />
+  selectedModule={selectedModule}
+  selectedVideo={selectedVideo}
+  onPreviousVideo={handlePreviousVideo}
+  onNextVideo={handleNextVideo}
+  onTrackedProgress={handleTrackedProgress}
+  onMarkDemoProgress={handleMarkDemoProgress}
+  onVideoEnded={handleVideoEnded}
+  hasPreviousVideo={
+    derivedData?.allUnlockedVideos?.findIndex(
+      (item) => item.video.id === selectedVideo?.id
+    ) > 0
+  }
+  hasNextVideo={Boolean(derivedData?.nextVideoItem)}
+/>
         </div>
 
         <div className="course-actions-grid">

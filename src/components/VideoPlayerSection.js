@@ -1,15 +1,78 @@
-import React from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 function VideoPlayerSection({
   selectedModule,
   selectedVideo,
   onPreviousVideo,
   onNextVideo,
+  onTrackedProgress,
   onMarkDemoProgress,
   onVideoEnded,
   hasPreviousVideo,
   hasNextVideo,
 }) {
+  const videoRef = useRef(null);
+  const sentMilestonesRef = useRef(new Set());
+
+  const [localProgress, setLocalProgress] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+
+  const milestoneSteps = useMemo(() => [10, 25, 50, 80, 100], []);
+
+  useEffect(() => {
+    setLocalProgress(selectedVideo?.watchedPercent || 0);
+    setVideoDuration(0);
+    sentMilestonesRef.current = new Set();
+
+    const alreadyWatched = selectedVideo?.watchedPercent || 0;
+    milestoneSteps.forEach((step) => {
+      if (alreadyWatched >= step) {
+        sentMilestonesRef.current.add(step);
+      }
+    });
+  }, [selectedVideo, milestoneSteps]);
+
+  const pushTrackedMilestone = (percent) => {
+    if (!selectedVideo || !onTrackedProgress) return;
+
+    if (!sentMilestonesRef.current.has(percent)) {
+      sentMilestonesRef.current.add(percent);
+      onTrackedProgress(percent);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    const duration = videoRef.current?.duration || 0;
+    setVideoDuration(duration);
+  };
+
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (!video || !video.duration || Number.isNaN(video.duration)) return;
+
+    const watched = Math.min(
+      100,
+      Math.floor((video.currentTime / video.duration) * 100)
+    );
+
+    setLocalProgress(watched);
+
+    milestoneSteps.forEach((step) => {
+      if (watched >= step) {
+        pushTrackedMilestone(step);
+      }
+    });
+  };
+
+  const handleEndedInternal = () => {
+    setLocalProgress(100);
+    pushTrackedMilestone(100);
+
+    if (onVideoEnded) {
+      onVideoEnded();
+    }
+  };
+
   if (!selectedModule || !selectedVideo) {
     return (
       <div className="video-player-card premium-video-card empty">
@@ -33,22 +96,30 @@ function VideoPlayerSection({
         </div>
 
         <div className="video-player-status premium-video-status">
-          <span>{selectedVideo.duration}</span>
+          <span>
+            {selectedVideo.duration ||
+              (videoDuration
+                ? `${Math.floor(videoDuration / 60)}:${String(
+                    Math.floor(videoDuration % 60)
+                  ).padStart(2, "0")}`
+                : "Video")}
+          </span>
           <strong>
-            {selectedVideo.completed
-              ? "Completed"
-              : `${selectedVideo.watchedPercent || 0}% Watched`}
+            {localProgress >= 80 ? "Completed" : `${localProgress}% Watched`}
           </strong>
         </div>
       </div>
 
       <div className="video-player-wrapper premium-video-wrapper">
         <video
+          ref={videoRef}
           key={selectedVideo.id}
           controls
           className="internova-video-player"
           src={selectedVideo.videoUrl}
-          onEnded={onVideoEnded}
+          onLoadedMetadata={handleLoadedMetadata}
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={handleEndedInternal}
         >
           Your browser does not support the video tag.
         </video>
@@ -69,7 +140,7 @@ function VideoPlayerSection({
         <button
           type="button"
           className="demo-progress-btn elite-focus-ring"
-          onClick={() => onMarkDemoProgress(25)}
+          onClick={() => onMarkDemoProgress?.(25)}
         >
           Mark 25%
         </button>
@@ -77,7 +148,7 @@ function VideoPlayerSection({
         <button
           type="button"
           className="demo-progress-btn elite-focus-ring"
-          onClick={() => onMarkDemoProgress(50)}
+          onClick={() => onMarkDemoProgress?.(50)}
         >
           Mark 50%
         </button>
@@ -85,7 +156,7 @@ function VideoPlayerSection({
         <button
           type="button"
           className="demo-progress-btn elite-focus-ring"
-          onClick={() => onMarkDemoProgress(80)}
+          onClick={() => onMarkDemoProgress?.(80)}
         >
           Mark 80%
         </button>
@@ -93,7 +164,7 @@ function VideoPlayerSection({
         <button
           type="button"
           className="demo-progress-btn primary elite-focus-ring"
-          onClick={() => onMarkDemoProgress(100)}
+          onClick={() => onMarkDemoProgress?.(100)}
         >
           Mark 100%
         </button>
@@ -135,8 +206,8 @@ function VideoPlayerSection({
         <div className="video-info-card premium-info-card">
           <h4>Learning Goal</h4>
           <p>
-            Complete at least 80% watch progress on this topic so it can count
-            toward course completion and certificate eligibility.
+            Watch at least 80% of this topic to count it toward course
+            completion and certificate eligibility.
           </p>
         </div>
 
@@ -150,19 +221,19 @@ function VideoPlayerSection({
         </div>
 
         <div className="video-info-card premium-info-card">
-          <h4>Smart Progress Rule</h4>
+          <h4>Tracking Mode</h4>
           <p>
-            In final backend version, progress will update automatically from
-            real watch time instead of demo buttons.
+            This video now tracks real watch milestones and updates course
+            progress progressively.
           </p>
         </div>
       </div>
 
       <div className="video-player-feature-note premium-feature-note">
         <p>
-          Demo progress buttons are temporary. Next backend phase me real watch
-          tracking, resume position, autoplay next, speed memory and secure
-          completion logic add kiya jayega.
+          Real watch tracking is now active through video playback milestones.
+          Next upgrade will add resume position, speed memory, and stronger
+          anti-skip tracking.
         </p>
       </div>
     </div>
