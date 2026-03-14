@@ -100,12 +100,12 @@ function AppLayout() {
           }
         />
 
-          <Route
+        <Route
   path="/admin/dashboard"
   element={
-    <RequireAdmin>
+    <AdminRoute>
       <AdminDashboard />
-    </RequireAdmin>
+    </AdminRoute>
   }
 />
 
