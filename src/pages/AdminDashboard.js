@@ -1,6 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
 import { Link } from "react-router-dom";
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 
 function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -45,7 +58,6 @@ function AdminDashboard() {
 
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
-
     setTimeout(() => {
       setToast({ show: false, type: "success", message: "" });
     }, 3000);
@@ -112,6 +124,58 @@ function AdminDashboard() {
     });
   }, [recentPurchases, purchaseSearch, paymentFilter, certificateFilter]);
 
+  const chartPrograms = useMemo(
+    () => [
+      { name: "Active", value: stats.activePrograms || 0 },
+      { name: "Inactive", value: stats.inactivePrograms || 0 },
+    ],
+    [stats.activePrograms, stats.inactivePrograms]
+  );
+
+  const chartUsers = useMemo(
+    () => [
+      { name: "Admins", value: stats.totalAdmins || 0 },
+      { name: "Users", value: stats.totalNormalUsers || 0 },
+      { name: "Recent Logins", value: stats.recentlyLoggedInUsers || 0 },
+    ],
+    [stats.totalAdmins, stats.totalNormalUsers, stats.recentlyLoggedInUsers]
+  );
+
+  const chartPurchases = useMemo(
+    () => [
+      { name: "Paid", value: stats.paidPurchases || 0 },
+      { name: "Failed", value: stats.failedPurchases || 0 },
+      {
+        name: "Created",
+        value: Math.max(
+          0,
+          (stats.totalPurchases || 0) -
+            (stats.paidPurchases || 0) -
+            (stats.failedPurchases || 0)
+        ),
+      },
+    ],
+    [stats.totalPurchases, stats.paidPurchases, stats.failedPurchases]
+  );
+
+  const chartLearning = useMemo(
+    () => [
+      { name: "Quiz Passed", value: stats.totalQuizPassed || 0 },
+      {
+        name: "Certificates",
+        value: stats.totalCertificatesIssued || 0,
+      },
+      { name: "Modules", value: stats.totalModules || 0 },
+      { name: "Videos", value: stats.totalVideos || 0 },
+    ],
+    [
+      stats.totalQuizPassed,
+      stats.totalCertificatesIssued,
+      stats.totalModules,
+      stats.totalVideos,
+    ]
+  );
+
   const formatDate = (value) => {
     if (!value) return "N/A";
     const date = new Date(value);
@@ -136,8 +200,8 @@ function AdminDashboard() {
     });
   };
 
-  const getProgramStatusBadge = (isActive) => {
-    return isActive ? (
+  const getProgramStatusBadge = (isActive) =>
+    isActive ? (
       <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
         Active
       </span>
@@ -146,10 +210,9 @@ function AdminDashboard() {
         Inactive
       </span>
     );
-  };
 
-  const getUserRoleBadge = (role) => {
-    return role === "admin" ? (
+  const getUserRoleBadge = (role) =>
+    role === "admin" ? (
       <span className="badge bg-warning-subtle text-warning-emphasis border rounded-pill px-3 py-2">
         Admin
       </span>
@@ -158,10 +221,9 @@ function AdminDashboard() {
         User
       </span>
     );
-  };
 
-  const getUserActiveBadge = (isActive) => {
-    return isActive ? (
+  const getUserActiveBadge = (isActive) =>
+    isActive ? (
       <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
         Active
       </span>
@@ -170,7 +232,6 @@ function AdminDashboard() {
         Inactive
       </span>
     );
-  };
 
   const getPaymentBadge = (paymentStatus) => {
     if (paymentStatus === "paid") {
@@ -180,7 +241,6 @@ function AdminDashboard() {
         </span>
       );
     }
-
     if (paymentStatus === "failed") {
       return (
         <span className="badge bg-danger-subtle text-danger border rounded-pill px-3 py-2">
@@ -188,7 +248,6 @@ function AdminDashboard() {
         </span>
       );
     }
-
     return (
       <span className="badge bg-secondary-subtle text-dark border rounded-pill px-3 py-2">
         Created
@@ -196,8 +255,8 @@ function AdminDashboard() {
     );
   };
 
-  const getYesNoBadge = (value, yesLabel = "Yes", noLabel = "No") => {
-    return value ? (
+  const getYesNoBadge = (value, yesLabel = "Yes", noLabel = "No") =>
+    value ? (
       <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
         {yesLabel}
       </span>
@@ -206,7 +265,6 @@ function AdminDashboard() {
         {noLabel}
       </span>
     );
-  };
 
   if (loading) {
     return (
@@ -244,7 +302,6 @@ function AdminDashboard() {
           filter: blur(10px);
           opacity: 0.55;
           animation: adminDashboardFloat 9s ease-in-out infinite;
-          -webkit-animation: adminDashboardFloat 9s ease-in-out infinite;
           pointer-events: none;
         }
 
@@ -263,7 +320,6 @@ function AdminDashboard() {
           bottom: 70px;
           background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(59,130,246,0.22));
           animation-delay: 1.2s;
-          -webkit-animation-delay: 1.2s;
         }
 
         .admin-dashboard-shell {
@@ -302,7 +358,6 @@ function AdminDashboard() {
           background: rgba(255,255,255,0.12);
           border: 1px solid rgba(255,255,255,0.18);
           backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
           font-size: 0.8rem;
           font-weight: 700;
           letter-spacing: 0.08em;
@@ -324,24 +379,23 @@ function AdminDashboard() {
           max-width: 760px;
         }
 
-        .admin-stat-card {
+        .admin-stat-card,
+        .admin-chart-card {
           border-radius: 28px;
           border: 1px solid rgba(255,255,255,0.45);
           background: rgba(255,255,255,0.78);
           backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
           box-shadow:
             0 22px 65px rgba(15, 23, 42, 0.10),
             0 8px 20px rgba(59,130,246,0.05);
           padding: 24px;
           height: 100%;
           transition: all 0.35s ease;
-          -webkit-transition: all 0.35s ease;
         }
 
-        .admin-stat-card:hover {
+        .admin-stat-card:hover,
+        .admin-chart-card:hover {
           transform: translateY(-4px);
-          -webkit-transform: translateY(-4px);
         }
 
         .admin-stat-label {
@@ -358,11 +412,17 @@ function AdminDashboard() {
           margin-bottom: 0;
         }
 
+        .admin-chart-title {
+          font-size: 1.1rem;
+          font-weight: 800;
+          color: #0f172a;
+          margin-bottom: 12px;
+        }
+
         .admin-section-card {
           border: 1px solid rgba(255,255,255,0.42);
           background: rgba(255,255,255,0.72);
           backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
           box-shadow:
             0 24px 70px rgba(15, 23, 42, 0.14),
             0 8px 24px rgba(59,130,246,0.08);
@@ -476,10 +536,6 @@ function AdminDashboard() {
           margin-bottom: 22px;
         }
 
-        .admin-filter-grid.purchase-grid {
-          grid-template-columns: 2fr 1fr 1fr;
-        }
-
         .admin-input,
         .admin-select {
           min-height: 52px;
@@ -499,7 +555,6 @@ function AdminDashboard() {
           inset: 0;
           background: rgba(15, 23, 42, 0.55);
           backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
           z-index: 99998;
           display: flex;
           align-items: center;
@@ -527,33 +582,18 @@ function AdminDashboard() {
         }
 
         @keyframes adminDashboardFloat {
-          0%, 100% {
-            transform: translateY(0px) translateX(0px);
-          }
-          50% {
-            transform: translateY(-18px) translateX(10px);
-          }
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-18px) translateX(10px); }
         }
 
         @media (max-width: 991px) {
-          .admin-dashboard-title {
-            font-size: 1.95rem;
-          }
-
-          .admin-filter-grid,
-          .admin-filter-grid.purchase-grid {
-            grid-template-columns: 1fr;
-          }
+          .admin-dashboard-title { font-size: 1.95rem; }
+          .admin-filter-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 767px) {
-          .admin-dashboard-page {
-            padding: 22px 0;
-          }
-
-          .admin-dashboard-title {
-            font-size: 1.7rem;
-          }
+          .admin-dashboard-page { padding: 22px 0; }
+          .admin-dashboard-title { font-size: 1.7rem; }
         }
       `}</style>
 
@@ -613,17 +653,10 @@ function AdminDashboard() {
 
                 <div className="col-lg-4">
                   <div className="d-grid gap-3">
-                    <Link
-                      to="/admin/internships"
-                      className="btn btn-light admin-action-btn"
-                    >
+                    <Link to="/admin/internships" className="btn btn-light admin-action-btn">
                       Manage Internships
                     </Link>
-
-                    <Link
-                      to="/dashboard"
-                      className="btn btn-outline-light admin-action-btn"
-                    >
+                    <Link to="/dashboard" className="btn btn-outline-light admin-action-btn">
                       Back to User Dashboard
                     </Link>
                   </div>
@@ -657,18 +690,71 @@ function AdminDashboard() {
           </div>
 
           <div className="row g-4 mb-4">
-            {[
-              ["Total Modules", stats.totalModules],
-              ["Total Videos", stats.totalVideos],
-              ["Total Quiz Questions", stats.totalQuizQuestions],
-            ].map(([label, value], idx) => (
-              <div className="col-md-6 col-xl-4" key={idx}>
-                <div className="admin-stat-card">
-                  <div className="admin-stat-label">{label}</div>
-                  <h3 className="admin-stat-value">{value || 0}</h3>
-                </div>
+            <div className="col-lg-6">
+              <div className="admin-chart-card">
+                <h4 className="admin-chart-title">Programs Status</h4>
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={chartPrograms} dataKey="value" nameKey="name" outerRadius={95} label>
+                      {chartPrograms.map((_, index) => (
+                        <Cell key={index} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-            ))}
+            </div>
+
+            <div className="col-lg-6">
+              <div className="admin-chart-card">
+                <h4 className="admin-chart-title">Users Distribution</h4>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={chartUsers}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" name="Count" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="col-lg-6">
+              <div className="admin-chart-card">
+                <h4 className="admin-chart-title">Purchase Status</h4>
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={chartPurchases} dataKey="value" nameKey="name" outerRadius={95} label>
+                      {chartPurchases.map((_, index) => (
+                        <Cell key={index} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="col-lg-6">
+              <div className="admin-chart-card">
+                <h4 className="admin-chart-title">Learning Outcomes</h4>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={chartLearning}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" name="Count" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
 
           <div className="admin-section-card p-4 p-md-5 mb-4">
@@ -686,48 +772,19 @@ function AdminDashboard() {
                       <div>{getProgramStatusBadge(item.isActive)}</div>
                     </div>
 
-                    <p className="admin-mini-text mb-1">
-                      <strong>Branch:</strong> {item.branch || "N/A"}
-                    </p>
-                    <p className="admin-mini-text mb-1">
-                      <strong>Category:</strong> {item.category || "N/A"}
-                    </p>
-                    <p className="admin-mini-text mb-1">
-                      <strong>Modules:</strong> {item.modulesCount || 0}
-                    </p>
-                    <p className="admin-mini-text mb-1">
-                      <strong>Videos:</strong> {item.videosCount || 0}
-                    </p>
-                    <p className="admin-mini-text mb-3">
-                      <strong>Quiz:</strong> {item.quizCount || 0}
-                    </p>
+                    <p className="admin-mini-text mb-1"><strong>Branch:</strong> {item.branch || "N/A"}</p>
+                    <p className="admin-mini-text mb-1"><strong>Category:</strong> {item.category || "N/A"}</p>
+                    <p className="admin-mini-text mb-1"><strong>Modules:</strong> {item.modulesCount || 0}</p>
+                    <p className="admin-mini-text mb-1"><strong>Videos:</strong> {item.videosCount || 0}</p>
+                    <p className="admin-mini-text mb-3"><strong>Quiz:</strong> {item.quizCount || 0}</p>
 
-                    <Link
-                      to="/admin/internships"
-                      className="btn btn-outline-dark admin-action-btn w-100"
-                    >
+                    <Link to="/admin/internships" className="btn btn-outline-dark admin-action-btn w-100">
                       Open Manager
                     </Link>
                   </div>
                 </div>
               ))}
             </div>
-
-            {recentInternships.length === 0 && (
-              <div
-                className="rounded-4 p-4 mt-3"
-                style={{
-                  background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-                  border: "1px solid #93c5fd",
-                  color: "#1e3a8a",
-                }}
-              >
-                <h5 className="fw-bold mb-2">No Internship Data Found</h5>
-                <p className="mb-0">
-                  No programs are available right now. Create your first internship from the admin manager.
-                </p>
-              </div>
-            )}
           </div>
 
           <div className="admin-section-card p-4 p-md-5 mb-4">
@@ -824,7 +881,7 @@ function AdminDashboard() {
               Search and filter enrollment records with payment, progress, quiz, and certificate info.
             </p>
 
-            <div className="admin-filter-grid purchase-grid">
+            <div className="admin-filter-grid">
               <input
                 type="text"
                 className="form-control admin-input"
@@ -904,8 +961,7 @@ function AdminDashboard() {
                             {item.internship?.title || "Unknown Internship"}
                           </div>
                           <div className="admin-user-email">
-                            {item.internship?.branch || "N/A"} •{" "}
-                            {item.internship?.category || "N/A"}
+                            {item.internship?.branch || "N/A"} • {item.internship?.category || "N/A"}
                           </div>
                         </td>
 
@@ -913,40 +969,26 @@ function AdminDashboard() {
                         <td>₹{item.amount || 0}</td>
                         <td>{getPaymentBadge(item.paymentStatus)}</td>
                         <td>{formatDate(item.createdAt)}</td>
-
                         <td>
                           <div className="admin-progress-pill">
                             {item.progress?.overallProgress || 0}%
                           </div>
                         </td>
-
                         <td>
                           {getYesNoBadge(
                             item.quiz?.passed,
-                            item.quiz?.percentage
-                              ? `Passed (${item.quiz.percentage}%)`
-                              : "Passed",
+                            item.quiz?.percentage ? `Passed (${item.quiz.percentage}%)` : "Passed",
                             "Pending"
                           )}
                         </td>
-
                         <td>
-                          {getYesNoBadge(
-                            item.progress?.certificateEligible,
-                            "Eligible",
-                            "Locked"
-                          )}
+                          {getYesNoBadge(item.progress?.certificateEligible, "Eligible", "Locked")}
                         </td>
-
                         <td>
                           {item.certificate?.certificateId ? (
                             <div>
-                              <div className="admin-user-name">
-                                {item.certificate.certificateId}
-                              </div>
-                              <div className="admin-user-email">
-                                {formatDate(item.certificate.issuedAt)}
-                              </div>
+                              <div className="admin-user-name">{item.certificate.certificateId}</div>
+                              <div className="admin-user-email">{formatDate(item.certificate.issuedAt)}</div>
                             </div>
                           ) : (
                             <span className="badge bg-secondary-subtle text-dark border rounded-pill px-3 py-2">
@@ -954,7 +996,6 @@ function AdminDashboard() {
                             </span>
                           )}
                         </td>
-
                         <td>
                           <button
                             className="btn btn-outline-primary admin-view-btn"
@@ -982,10 +1023,7 @@ function AdminDashboard() {
 
       {selectedUser && (
         <div className="admin-modal-backdrop" onClick={() => setSelectedUser(null)}>
-          <div
-            className="admin-modal-card"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="admin-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
               <div>
                 <h3 className="fw-bold mb-2">{selectedUser.name || "Unknown User"}</h3>
@@ -1026,14 +1064,8 @@ function AdminDashboard() {
       )}
 
       {selectedPurchase && (
-        <div
-          className="admin-modal-backdrop"
-          onClick={() => setSelectedPurchase(null)}
-        >
-          <div
-            className="admin-modal-card"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="admin-modal-backdrop" onClick={() => setSelectedPurchase(null)}>
+          <div className="admin-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
               <div>
                 <h3 className="fw-bold mb-2">
@@ -1101,9 +1133,7 @@ function AdminDashboard() {
                   <h5 className="fw-bold mb-3">Certificate</h5>
                   <p className="mb-2"><strong>Eligible:</strong> {selectedPurchase.progress?.certificateEligible ? "Yes" : "No"}</p>
                   <p className="mb-2"><strong>Issued:</strong> {selectedPurchase.certificate?.certificateId ? "Yes" : "No"}</p>
-                  <p className="mb-0">
-                    <strong>ID:</strong> {selectedPurchase.certificate?.certificateId || "N/A"}
-                  </p>
+                  <p className="mb-0"><strong>ID:</strong> {selectedPurchase.certificate?.certificateId || "N/A"}</p>
                 </div>
               </div>
             </div>
