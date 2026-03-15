@@ -2,9 +2,6 @@ import React, { useEffect, useState } from "react";
 import API from "../services/api";
 import { useNavigate, useParams } from "react-router-dom";
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
-
 function CertificatePage() {
   const { internshipId } = useParams();
   const navigate = useNavigate();
@@ -13,6 +10,7 @@ function CertificatePage() {
   const [certificate, setCertificate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const [toast, setToast] = useState({
     show: false,
@@ -72,6 +70,55 @@ function CertificatePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [internshipId]);
 
+  const downloadCertificateFile = async (certificateId) => {
+    try {
+      if (!certificateId) {
+        showToast("error", "Certificate is not available for download yet");
+        return;
+      }
+
+      setDownloading(true);
+
+      const response = await API.get(
+        `/certificates/${certificateId}/download`,
+        {
+          responseType: "blob",
+        }
+      );
+
+      const contentDisposition = response.headers["content-disposition"] || "";
+      let fileName = "certificate.pdf";
+
+      const fileNameMatch = contentDisposition.match(/filename="([^"]+)"/i);
+      if (fileNameMatch?.[1]) {
+        fileName = fileNameMatch[1];
+      }
+
+      const blob = new Blob([response.data], {
+        type: "application/pdf",
+      });
+
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+
+      showToast("success", "Certificate downloaded successfully");
+    } catch (error) {
+      console.error("Certificate download error:", error);
+      showToast(
+        "error",
+        error?.response?.data?.message || "Failed to download certificate"
+      );
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const handleGenerateCertificate = async () => {
     try {
       setGenerating(true);
@@ -82,17 +129,18 @@ function CertificatePage() {
       );
 
       if (data?.success) {
-        setCertificate(data.certificate || null);
-        showToast("success", data.message || "Certificate generated successfully");
-
-        if (data?.certificate?.certificateId) {
-          window.open(
-            `${API_BASE_URL}/certificates/${data.certificate.certificateId}/download`,
-            "_blank"
-          );
-        }
+        const generatedCertificate = data.certificate || null;
+        setCertificate(generatedCertificate);
+        showToast(
+          "success",
+          data.message || "Certificate generated successfully"
+        );
 
         await fetchEligibility();
+
+        if (generatedCertificate?.certificateId) {
+          await downloadCertificateFile(generatedCertificate.certificateId);
+        }
       } else {
         showToast("error", "Certificate generation failed");
       }
@@ -107,16 +155,13 @@ function CertificatePage() {
     }
   };
 
-  const handleDownloadCertificate = () => {
+  const handleDownloadCertificate = async () => {
     if (!certificate?.certificateId) {
       showToast("error", "Certificate is not available for download yet");
       return;
     }
 
-    window.open(
-      `${API_BASE_URL}/certificates/${certificate.certificateId}/download`,
-      "_blank"
-    );
+    await downloadCertificateFile(certificate.certificateId);
   };
 
   const isEligible = !!eligibility?.certificateEligible;
@@ -564,15 +609,16 @@ function CertificatePage() {
                     type="button"
                     className="certificate-action-btn certificate-primary-btn"
                     onClick={handleDownloadCertificate}
+                    disabled={downloading}
                   >
-                    Download Certificate
+                    {downloading ? "Downloading..." : "Download Certificate"}
                   </button>
                 ) : (
                   <button
                     type="button"
                     className="certificate-action-btn certificate-primary-btn"
                     onClick={handleGenerateCertificate}
-                    disabled={!isEligible || generating}
+                    disabled={!isEligible || generating || downloading}
                   >
                     {generating
                       ? "Generating..."
