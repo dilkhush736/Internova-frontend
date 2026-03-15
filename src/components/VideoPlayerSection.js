@@ -119,21 +119,47 @@ function VideoPlayerSection({
 
       <div className="video-player-wrapper premium-video-wrapper">
         {isGoogleDriveVideo ? (
-          <iframe
-            key={selectedVideo.id}
-            src={videoUrl}
-            title={selectedVideo.title || "Course Video"}
-            className="internova-video-player"
-            allow="autoplay; fullscreen"
-            allowFullScreen
+          <div
             style={{
+              position: "relative",
               width: "100%",
-              height: "500px",
-              border: "none",
               borderRadius: "18px",
+              overflow: "hidden",
               background: "#000",
             }}
-          />
+          >
+            <iframe
+              key={selectedVideo.id}
+              src={videoUrl}
+              title={selectedVideo.title || "Course Video"}
+              className="internova-video-player"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+              style={{
+                width: "100%",
+                height: "500px",
+                border: "none",
+                display: "block",
+                borderRadius: "18px",
+                background: "#000",
+              }}
+            />
+
+            {/* Top-right Google Drive open icon blocker */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                width: "90px",
+                height: "90px",
+                zIndex: 10,
+                background: "transparent",
+                cursor: "default",
+              }}
+              aria-hidden="true"
+            />
+          </div>
         ) : (
           <video
             ref={videoRef}
