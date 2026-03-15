@@ -19,6 +19,13 @@ function VideoPlayerSection({
 
   const milestoneSteps = useMemo(() => [10, 25, 50, 80, 100], []);
 
+  const videoUrl = selectedVideo?.videoUrl || "";
+
+  const isGoogleDriveVideo =
+    videoUrl.includes("drive.google.com/file/d/") ||
+    videoUrl.includes("drive.google.com/open?id=") ||
+    videoUrl.includes("drive.google.com/uc?");
+
   useEffect(() => {
     setLocalProgress(selectedVideo?.watchedPercent || 0);
     setVideoDuration(0);
@@ -111,25 +118,45 @@ function VideoPlayerSection({
       </div>
 
       <div className="video-player-wrapper premium-video-wrapper">
-        <video
-          ref={videoRef}
-          key={selectedVideo.id}
-          controls
-          className="internova-video-player"
-          src={selectedVideo.videoUrl}
-          onLoadedMetadata={handleLoadedMetadata}
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleEndedInternal}
-        >
-          Your browser does not support the video tag.
-        </video>
+        {isGoogleDriveVideo ? (
+          <iframe
+            key={selectedVideo.id}
+            src={videoUrl}
+            title={selectedVideo.title || "Course Video"}
+            className="internova-video-player"
+            allow="autoplay; fullscreen"
+            allowFullScreen
+            style={{
+              width: "100%",
+              height: "500px",
+              border: "none",
+              borderRadius: "18px",
+              background: "#000",
+            }}
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            key={selectedVideo.id}
+            controls
+            className="internova-video-player"
+            src={videoUrl}
+            onLoadedMetadata={handleLoadedMetadata}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={handleEndedInternal}
+          >
+            Your browser does not support the video tag.
+          </video>
+        )}
       </div>
 
       <div className="video-player-controls-note premium-chip-row">
         <div className="player-feature-chip">Play / Pause</div>
         <div className="player-feature-chip">Replay</div>
         <div className="player-feature-chip">Speed Control</div>
-        <div className="player-feature-chip">Quality Switch</div>
+        <div className="player-feature-chip">
+          {isGoogleDriveVideo ? "Drive Player" : "Quality Switch"}
+        </div>
         <div className="player-feature-chip">Fullscreen</div>
         <div className="player-feature-chip">
           {hasNextVideo ? "Autoplay Next Ready" : "Last Video"}
@@ -223,17 +250,18 @@ function VideoPlayerSection({
         <div className="video-info-card premium-info-card">
           <h4>Tracking Mode</h4>
           <p>
-            This video now tracks real watch milestones and updates course
-            progress progressively.
+            {isGoogleDriveVideo
+              ? "Google Drive preview is active. Manual progress buttons are available for tracking."
+              : "This video now tracks real watch milestones and updates course progress progressively."}
           </p>
         </div>
       </div>
 
       <div className="video-player-feature-note premium-feature-note">
         <p>
-          Real watch tracking is now active through video playback milestones.
-          Next upgrade will add resume position, speed memory, and stronger
-          anti-skip tracking.
+          {isGoogleDriveVideo
+            ? "Google Drive videos work through embedded preview mode. Native watch tracking events may be limited, so manual progress buttons remain available."
+            : "Real watch tracking is now active through video playback milestones. Next upgrade will add resume position, speed memory, and stronger anti-skip tracking."}
         </p>
       </div>
     </div>
