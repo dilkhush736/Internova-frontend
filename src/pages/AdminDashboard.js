@@ -10,9 +10,21 @@ function AdminDashboard() {
     totalModules: 0,
     totalVideos: 0,
     totalQuizQuestions: 0,
+    totalUsers: 0,
+    totalAdmins: 0,
+    totalNormalUsers: 0,
+    activeUsers: 0,
+    recentlyLoggedInUsers: 0,
+    totalPurchases: 0,
+    paidPurchases: 0,
+    failedPurchases: 0,
+    totalCertificatesIssued: 0,
+    totalQuizPassed: 0,
   });
 
   const [recentInternships, setRecentInternships] = useState([]);
+  const [recentUsers, setRecentUsers] = useState([]);
+  const [recentPurchases, setRecentPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [toast, setToast] = useState({
@@ -34,6 +46,8 @@ function AdminDashboard() {
       const { data } = await API.get("/internships/admin/stats");
       setStats(data.stats || {});
       setRecentInternships(data.recentInternships || []);
+      setRecentUsers(data.recentUsers || []);
+      setRecentPurchases(data.recentPurchases || []);
     } catch (error) {
       console.error("Failed to fetch admin stats:", error);
       showToast("error", "Failed to fetch admin dashboard stats");
@@ -46,7 +60,31 @@ function AdminDashboard() {
     fetchStats();
   }, []);
 
-  const getStatusBadge = (isActive) => {
+  const formatDate = (value) => {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "N/A";
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return "Never";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Never";
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getProgramStatusBadge = (isActive) => {
     return isActive ? (
       <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
         Active
@@ -54,6 +92,66 @@ function AdminDashboard() {
     ) : (
       <span className="badge bg-secondary-subtle text-dark border rounded-pill px-3 py-2">
         Inactive
+      </span>
+    );
+  };
+
+  const getUserRoleBadge = (role) => {
+    return role === "admin" ? (
+      <span className="badge bg-warning-subtle text-warning-emphasis border rounded-pill px-3 py-2">
+        Admin
+      </span>
+    ) : (
+      <span className="badge bg-primary-subtle text-primary border rounded-pill px-3 py-2">
+        User
+      </span>
+    );
+  };
+
+  const getUserActiveBadge = (isActive) => {
+    return isActive ? (
+      <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
+        Active
+      </span>
+    ) : (
+      <span className="badge bg-danger-subtle text-danger border rounded-pill px-3 py-2">
+        Inactive
+      </span>
+    );
+  };
+
+  const getPaymentBadge = (paymentStatus) => {
+    if (paymentStatus === "paid") {
+      return (
+        <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
+          Paid
+        </span>
+      );
+    }
+
+    if (paymentStatus === "failed") {
+      return (
+        <span className="badge bg-danger-subtle text-danger border rounded-pill px-3 py-2">
+          Failed
+        </span>
+      );
+    }
+
+    return (
+      <span className="badge bg-secondary-subtle text-dark border rounded-pill px-3 py-2">
+        Created
+      </span>
+    );
+  };
+
+  const getYesNoBadge = (value, yesLabel = "Yes", noLabel = "No") => {
+    return value ? (
+      <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
+        {yesLabel}
+      </span>
+    ) : (
+      <span className="badge bg-secondary-subtle text-dark border rounded-pill px-3 py-2">
+        {noLabel}
       </span>
     );
   };
@@ -259,6 +357,66 @@ function AdminDashboard() {
           font-weight: 800;
         }
 
+        .admin-table-wrap {
+          overflow-x: auto;
+          border-radius: 20px;
+          border: 1px solid #e2e8f0;
+          background: rgba(255,255,255,0.92);
+        }
+
+        .admin-table {
+          width: 100%;
+          min-width: 980px;
+          border-collapse: separate;
+          border-spacing: 0;
+        }
+
+        .admin-table thead th {
+          background: #eff6ff;
+          color: #1e3a8a;
+          font-size: 0.86rem;
+          font-weight: 800;
+          padding: 16px 14px;
+          border-bottom: 1px solid #dbeafe;
+          white-space: nowrap;
+        }
+
+        .admin-table tbody td {
+          padding: 16px 14px;
+          border-bottom: 1px solid #eef2f7;
+          vertical-align: top;
+          color: #0f172a;
+          font-size: 0.95rem;
+        }
+
+        .admin-table tbody tr:hover {
+          background: rgba(239,246,255,0.55);
+        }
+
+        .admin-user-name {
+          font-weight: 800;
+          color: #0f172a;
+        }
+
+        .admin-user-email {
+          color: #64748b;
+          font-size: 0.9rem;
+          margin-top: 2px;
+        }
+
+        .admin-progress-pill {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 70px;
+          padding: 8px 12px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+          color: #1d4ed8;
+          font-weight: 800;
+          border: 1px solid #93c5fd;
+        }
+
         @keyframes adminDashboardFloat {
           0%, 100% {
             transform: translateY(0px) translateX(0px);
@@ -331,10 +489,11 @@ function AdminDashboard() {
               <div className="row g-4 align-items-center">
                 <div className="col-lg-8">
                   <div className="admin-dashboard-chip">Internova Admin Overview</div>
-                  <h1 className="admin-dashboard-title">Admin Dashboard Stats</h1>
+                  <h1 className="admin-dashboard-title">Admin Intelligence Dashboard</h1>
                   <p className="admin-dashboard-text">
-                    Monitor programs, modules, videos, quizzes, and recent internship activity
-                    from one clean premium admin overview panel.
+                    Monitor programs, users, enrollments, quiz completions,
+                    certificates, and recent purchase activity from one premium
+                    admin command center.
                   </p>
                 </div>
 
@@ -360,27 +519,94 @@ function AdminDashboard() {
           </div>
 
           <div className="row g-4 mb-4">
-            <div className="col-md-6 col-xl-4">
+            <div className="col-md-6 col-xl-3">
               <div className="admin-stat-card">
                 <div className="admin-stat-label">Total Programs</div>
                 <h3 className="admin-stat-value">{stats.totalPrograms || 0}</h3>
               </div>
             </div>
 
-            <div className="col-md-6 col-xl-4">
+            <div className="col-md-6 col-xl-3">
               <div className="admin-stat-card">
                 <div className="admin-stat-label">Active Programs</div>
                 <h3 className="admin-stat-value">{stats.activePrograms || 0}</h3>
               </div>
             </div>
 
-            <div className="col-md-6 col-xl-4">
+            <div className="col-md-6 col-xl-3">
               <div className="admin-stat-card">
                 <div className="admin-stat-label">Inactive Programs</div>
                 <h3 className="admin-stat-value">{stats.inactivePrograms || 0}</h3>
               </div>
             </div>
 
+            <div className="col-md-6 col-xl-3">
+              <div className="admin-stat-card">
+                <div className="admin-stat-label">Total Users</div>
+                <h3 className="admin-stat-value">{stats.totalUsers || 0}</h3>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-xl-3">
+              <div className="admin-stat-card">
+                <div className="admin-stat-label">Admins</div>
+                <h3 className="admin-stat-value">{stats.totalAdmins || 0}</h3>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-xl-3">
+              <div className="admin-stat-card">
+                <div className="admin-stat-label">Normal Users</div>
+                <h3 className="admin-stat-value">{stats.totalNormalUsers || 0}</h3>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-xl-3">
+              <div className="admin-stat-card">
+                <div className="admin-stat-label">Active Users</div>
+                <h3 className="admin-stat-value">{stats.activeUsers || 0}</h3>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-xl-3">
+              <div className="admin-stat-card">
+                <div className="admin-stat-label">Recent Logins</div>
+                <h3 className="admin-stat-value">{stats.recentlyLoggedInUsers || 0}</h3>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-xl-3">
+              <div className="admin-stat-card">
+                <div className="admin-stat-label">Total Purchases</div>
+                <h3 className="admin-stat-value">{stats.totalPurchases || 0}</h3>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-xl-3">
+              <div className="admin-stat-card">
+                <div className="admin-stat-label">Paid Purchases</div>
+                <h3 className="admin-stat-value">{stats.paidPurchases || 0}</h3>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-xl-3">
+              <div className="admin-stat-card">
+                <div className="admin-stat-label">Certificates Issued</div>
+                <h3 className="admin-stat-value">
+                  {stats.totalCertificatesIssued || 0}
+                </h3>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-xl-3">
+              <div className="admin-stat-card">
+                <div className="admin-stat-label">Quiz Passed</div>
+                <h3 className="admin-stat-value">{stats.totalQuizPassed || 0}</h3>
+              </div>
+            </div>
+          </div>
+
+          <div className="row g-4 mb-4">
             <div className="col-md-6 col-xl-4">
               <div className="admin-stat-card">
                 <div className="admin-stat-label">Total Modules</div>
@@ -403,7 +629,7 @@ function AdminDashboard() {
             </div>
           </div>
 
-          <div className="admin-section-card p-4 p-md-5">
+          <div className="admin-section-card p-4 p-md-5 mb-4">
             <h3 className="admin-section-title">Recent Internships</h3>
             <p className="admin-section-subtitle">
               Quickly review your latest created or updated internship programs.
@@ -415,7 +641,7 @@ function AdminDashboard() {
                   <div className="admin-recent-card">
                     <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-2">
                       <h5 className="admin-recent-title mb-0">{item.title}</h5>
-                      <div>{getStatusBadge(item.isActive)}</div>
+                      <div>{getProgramStatusBadge(item.isActive)}</div>
                     </div>
 
                     <p className="admin-mini-text mb-1">
@@ -460,6 +686,158 @@ function AdminDashboard() {
                 </p>
               </div>
             )}
+          </div>
+
+          <div className="admin-section-card p-4 p-md-5 mb-4">
+            <h3 className="admin-section-title">Recent Users</h3>
+            <p className="admin-section-subtitle">
+              View latest registered users, their roles, login activity, and purchase counts.
+            </p>
+
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Last Login</th>
+                    <th>Purchases</th>
+                    <th>Certificates</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentUsers.length > 0 ? (
+                    recentUsers.map((user) => (
+                      <tr key={user._id}>
+                        <td>
+                          <div className="admin-user-name">{user.name || "Unknown User"}</div>
+                          <div className="admin-user-email">{user.email || "N/A"}</div>
+                        </td>
+                        <td>{getUserRoleBadge(user.role)}</td>
+                        <td>{getUserActiveBadge(user.isActive)}</td>
+                        <td>{formatDate(user.createdAt)}</td>
+                        <td>{formatDateTime(user.lastLoginAt)}</td>
+                        <td>{user.purchasesCount || 0}</td>
+                        <td>{user.certificatesCount || 0}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="text-center py-4 text-secondary">
+                        No user data available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="admin-section-card p-4 p-md-5">
+            <h3 className="admin-section-title">Recent Purchases & Enrollment Insights</h3>
+            <p className="admin-section-subtitle">
+              Track who purchased what, payment status, course progress, quiz completion,
+              and certificate issuance from one place.
+            </p>
+
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Internship</th>
+                    <th>Duration</th>
+                    <th>Amount</th>
+                    <th>Payment</th>
+                    <th>Purchased On</th>
+                    <th>Progress</th>
+                    <th>Quiz</th>
+                    <th>Eligible</th>
+                    <th>Certificate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentPurchases.length > 0 ? (
+                    recentPurchases.map((item) => (
+                      <tr key={item._id}>
+                        <td>
+                          <div className="admin-user-name">
+                            {item.user?.name || "Unknown User"}
+                          </div>
+                          <div className="admin-user-email">
+                            {item.user?.email || "N/A"}
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="admin-user-name">
+                            {item.internship?.title || "Unknown Internship"}
+                          </div>
+                          <div className="admin-user-email">
+                            {item.internship?.branch || "N/A"} •{" "}
+                            {item.internship?.category || "N/A"}
+                          </div>
+                        </td>
+
+                        <td>{item.durationLabel || "N/A"}</td>
+                        <td>₹{item.amount || 0}</td>
+                        <td>{getPaymentBadge(item.paymentStatus)}</td>
+                        <td>{formatDate(item.createdAt)}</td>
+
+                        <td>
+                          <div className="admin-progress-pill">
+                            {item.progress?.overallProgress || 0}%
+                          </div>
+                        </td>
+
+                        <td>
+                          {getYesNoBadge(
+                            item.quiz?.passed,
+                            item.quiz?.percentage
+                              ? `Passed (${item.quiz.percentage}%)`
+                              : "Passed",
+                            "Pending"
+                          )}
+                        </td>
+
+                        <td>
+                          {getYesNoBadge(
+                            item.progress?.certificateEligible,
+                            "Eligible",
+                            "Locked"
+                          )}
+                        </td>
+
+                        <td>
+                          {item.certificate?.certificateId ? (
+                            <div>
+                              <div className="admin-user-name">
+                                {item.certificate.certificateId}
+                              </div>
+                              <div className="admin-user-email">
+                                {formatDate(item.certificate.issuedAt)}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="badge bg-secondary-subtle text-dark border rounded-pill px-3 py-2">
+                              Not Issued
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="10" className="text-center py-4 text-secondary">
+                        No purchase data available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
