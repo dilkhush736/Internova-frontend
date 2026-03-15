@@ -41,8 +41,12 @@ function VideoPlayerSection({
   const rawVideoUrl = selectedVideo?.videoUrl || "";
   const embeddedVideoUrl = convertVideoUrlToEmbedUrl(rawVideoUrl);
 
-  const isGoogleDriveVideo = isGoogleDriveLink(rawVideoUrl);
-  const isYouTubeVideo = isYouTubeLink(rawVideoUrl);
+  const isYouTubeVideo =
+    isYouTubeLink(rawVideoUrl) || isYouTubeLink(embeddedVideoUrl);
+
+  const isGoogleDriveVideo =
+    isGoogleDriveLink(rawVideoUrl) || isGoogleDriveLink(embeddedVideoUrl);
+
   const isIframeVideo = isGoogleDriveVideo || isYouTubeVideo;
 
   const showToast = (type, message) => {
@@ -574,7 +578,8 @@ function VideoPlayerSection({
             boxShadow: "0 12px 24px rgba(59,130,246,0.12)",
           }}
         >
-          Next video starts in {nextCountdown} second{nextCountdown > 1 ? "s" : ""}
+          Next video starts in {nextCountdown} second
+          {nextCountdown > 1 ? "s" : ""}
         </div>
       )}
 
