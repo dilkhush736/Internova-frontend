@@ -11,24 +11,21 @@ function VideoPlayerSection({
   onPreviousVideo,
   onNextVideo,
   onTrackedProgress,
-  onMarkDemoProgress,
   onVideoEnded,
   hasPreviousVideo,
   hasNextVideo,
 }) {
   const videoRef = useRef(null);
   const sentMilestonesRef = useRef(new Set());
-  const driveTrackingIntervalRef = useRef(null);
-  const driveElapsedSecondsRef = useRef(0);
-  const driveEndedTriggeredRef = useRef(false);
   const completionToastShownRef = useRef(false);
   const completionHandledRef = useRef(false);
   const nextCountdownIntervalRef = useRef(null);
+  const highestAllowedTimeRef = useRef(0);
+  const lastSaveSecondRef = useRef(-1);
+  const seekGuardToleranceRef = useRef(3);
 
   const [localProgress, setLocalProgress] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
-  const [isDriveTrackingPlaying, setIsDriveTrackingPlaying] = useState(false);
-  const [driveElapsedSeconds, setDriveElapsedSeconds] = useState(0);
   const [nextCountdown, setNextCountdown] = useState(0);
   const [toast, setToast] = useState({
     show: false,
@@ -48,6 +45,12 @@ function VideoPlayerSection({
     isGoogleDriveLink(rawVideoUrl) || isGoogleDriveLink(embeddedVideoUrl);
 
   const isIframeVideo = isGoogleDriveVideo || isYouTubeVideo;
+  const isDirectVideo = !isIframeVideo;
+
+  const resumeStorageKey = useMemo(() => {
+    if (!selectedVideo?.id) return "";
+    return `internova_video_resume_${selectedVideo.id}`;
+  }, [selectedVideo?.id]);
 
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
@@ -59,7 +62,6 @@ function VideoPlayerSection({
 
   const showCompletionToastOnce = () => {
     if (completionToastShownRef.current) return;
-
     completionToastShownRef.current = true;
     showToast(
       "success",
@@ -82,7 +84,6 @@ function VideoPlayerSection({
     setNextCountdown(3);
 
     let remaining = 3;
-
     nextCountdownIntervalRef.current = setInterval(() => {
       remaining -= 1;
       setNextCountdown(remaining);
@@ -94,10 +95,36 @@ function VideoPlayerSection({
     }, 1000);
   };
 
-  const stopDriveTrackingInterval = () => {
-    if (driveTrackingIntervalRef.current) {
-      clearInterval(driveTrackingIntervalRef.current);
-      driveTrackingIntervalRef.current = null;
+  const saveResumePosition = (seconds) => {
+    if (!resumeStorageKey || !Number.isFinite(seconds) || seconds < 0) return;
+
+    try {
+      localStorage.setItem(resumeStorageKey, String(Math.floor(seconds)));
+    } catch (error) {
+      console.error("Failed to save resume position:", error);
+    }
+  };
+
+  const clearResumePosition = () => {
+    if (!resumeStorageKey) return;
+
+    try {
+      localStorage.removeItem(resumeStorageKey);
+    } catch (error) {
+      console.error("Failed to clear resume position:", error);
+    }
+  };
+
+  const getSavedResumePosition = () => {
+    if (!resumeStorageKey) return 0;
+
+    try {
+      const raw = localStorage.getItem(resumeStorageKey);
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    } catch (error) {
+      console.error("Failed to read resume position:", error);
+      return 0;
     }
   };
 
@@ -106,9 +133,8 @@ function VideoPlayerSection({
     completionHandledRef.current = true;
 
     setLocalProgress(100);
-    setIsDriveTrackingPlaying(false);
     clearNextCountdown();
-    stopDriveTrackingInterval();
+    clearResumePosition();
     showCompletionToastOnce();
 
     if (onVideoEnded) {
@@ -120,101 +146,29 @@ function VideoPlayerSection({
     }
   };
 
-  const parseDurationToSeconds = (durationText = "") => {
-    if (!durationText || typeof durationText !== "string") return 0;
-
-    const value = durationText.trim().toLowerCase();
-    if (!value) return 0;
-
-    if (value.includes(":")) {
-      const parts = value
-        .split(":")
-        .map((part) => Number(part.trim()))
-        .filter((part) => !Number.isNaN(part));
-
-      if (parts.length === 3) {
-        const [hours, minutes, seconds] = parts;
-        return hours * 3600 + minutes * 60 + seconds;
-      }
-
-      if (parts.length === 2) {
-        const [minutes, seconds] = parts;
-        return minutes * 60 + seconds;
-      }
-    }
-
-    let match = value.match(/(\d+(\.\d+)?)\s*(min|mins|minute|minutes)\b/);
-    if (match?.[1]) {
-      return Math.max(1, Math.round(Number(match[1]) * 60));
-    }
-
-    match = value.match(/(\d+(\.\d+)?)\s*(sec|secs|second|seconds)\b/);
-    if (match?.[1]) {
-      return Math.max(1, Math.round(Number(match[1])));
-    }
-
-    if (/^\d+(\.\d+)?$/.test(value)) {
-      return Math.max(1, Math.round(Number(value) * 60));
-    }
-
-    return 0;
-  };
-
-  const formatSeconds = (seconds = 0) => {
-    const safeSeconds = Math.max(0, Math.floor(seconds));
-
-    const hours = Math.floor(safeSeconds / 3600);
-    const minutes = Math.floor((safeSeconds % 3600) / 60);
-    const secs = safeSeconds % 60;
-
-    if (hours > 0) {
-      return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-    }
-
-    return `${minutes}:${String(secs).padStart(2, "0")}`;
-  };
-
-  const derivedDriveDurationSeconds = useMemo(() => {
-    const parsed = parseDurationToSeconds(selectedVideo?.duration || "");
-    return parsed > 0 ? parsed : 600;
-  }, [selectedVideo]);
-
   useEffect(() => {
-    setLocalProgress(selectedVideo?.watchedPercent || 0);
+    const restoredProgress = selectedVideo?.watchedPercent || 0;
+
+    setLocalProgress(restoredProgress);
     setVideoDuration(0);
-    setIsDriveTrackingPlaying(false);
-    setDriveElapsedSeconds(0);
     setNextCountdown(0);
     completionToastShownRef.current = false;
     completionHandledRef.current = false;
     sentMilestonesRef.current = new Set();
-    driveElapsedSecondsRef.current = 0;
-    driveEndedTriggeredRef.current = false;
+    highestAllowedTimeRef.current = 0;
+    lastSaveSecondRef.current = -1;
     clearNextCountdown();
 
-    const alreadyWatched = selectedVideo?.watchedPercent || 0;
     milestoneSteps.forEach((step) => {
-      if (alreadyWatched >= step) {
+      if (restoredProgress >= step) {
         sentMilestonesRef.current.add(step);
       }
     });
 
-    if (alreadyWatched > 0 && derivedDriveDurationSeconds > 0) {
-      const restoredSeconds = Math.floor(
-        (alreadyWatched / 100) * derivedDriveDurationSeconds
-      );
-      driveElapsedSecondsRef.current = restoredSeconds;
-      setDriveElapsedSeconds(restoredSeconds);
-    }
-
     return () => {
-      if (driveTrackingIntervalRef.current) {
-        clearInterval(driveTrackingIntervalRef.current);
-        driveTrackingIntervalRef.current = null;
-      }
       clearNextCountdown();
     };
-  }, [selectedVideo, milestoneSteps, derivedDriveDurationSeconds]);
+  }, [selectedVideo, milestoneSteps]);
 
   const pushTrackedMilestone = (percent) => {
     if (!selectedVideo || !onTrackedProgress) return;
@@ -225,18 +179,70 @@ function VideoPlayerSection({
     }
   };
 
+  const syncRestoredTimeFromProgressAndResume = (duration) => {
+    if (!duration || duration <= 0) return;
+
+    const restoredProgress = selectedVideo?.watchedPercent || 0;
+    const progressTime =
+      restoredProgress > 0
+        ? Math.floor((restoredProgress / 100) * duration)
+        : 0;
+
+    const savedResumeTime = getSavedResumePosition();
+    const safeResumeTime = Math.min(savedResumeTime, Math.max(0, duration - 2));
+    const startTime = Math.max(progressTime, safeResumeTime);
+
+    highestAllowedTimeRef.current = startTime;
+
+    if (videoRef.current && startTime > 0) {
+      try {
+        videoRef.current.currentTime = startTime;
+      } catch (error) {
+        console.error("Failed to restore playback time:", error);
+      }
+    }
+  };
+
   const handleLoadedMetadata = () => {
     const duration = videoRef.current?.duration || 0;
     setVideoDuration(duration);
+    syncRestoredTimeFromProgressAndResume(duration);
+  };
+
+  const handleSeeked = () => {
+    const video = videoRef.current;
+    if (!video || !video.duration || Number.isNaN(video.duration)) return;
+
+    const currentTime = video.currentTime;
+    const maxAllowedForwardTime =
+      highestAllowedTimeRef.current + seekGuardToleranceRef.current;
+
+    if (currentTime > maxAllowedForwardTime) {
+      video.currentTime = highestAllowedTimeRef.current;
+      showToast("error", "Skipping ahead is restricted for progress tracking");
+      return;
+    }
   };
 
   const handleTimeUpdate = () => {
     const video = videoRef.current;
     if (!video || !video.duration || Number.isNaN(video.duration)) return;
 
+    const currentTime = video.currentTime;
+
+    if (currentTime > highestAllowedTimeRef.current) {
+      highestAllowedTimeRef.current = currentTime;
+    }
+
+    const flooredSecond = Math.floor(highestAllowedTimeRef.current);
+    if (flooredSecond !== lastSaveSecondRef.current) {
+      lastSaveSecondRef.current = flooredSecond;
+      saveResumePosition(highestAllowedTimeRef.current);
+    }
+
     const watched = Math.min(
       100,
-      Math.floor((video.currentTime / video.duration) * 100)
+      Math.floor((highestAllowedTimeRef.current / video.duration) * 100)
     );
 
     setLocalProgress(watched);
@@ -252,97 +258,6 @@ function VideoPlayerSection({
     setLocalProgress(100);
     pushTrackedMilestone(100);
     handleCompletionFlow();
-  };
-
-  const startDriveTrackingInterval = () => {
-    stopDriveTrackingInterval();
-
-    driveTrackingIntervalRef.current = setInterval(() => {
-      if (document.hidden || !isDriveTrackingPlaying) return;
-
-      driveElapsedSecondsRef.current += 1;
-      setDriveElapsedSeconds(driveElapsedSecondsRef.current);
-
-      const watched = Math.min(
-        100,
-        Math.floor(
-          (driveElapsedSecondsRef.current / derivedDriveDurationSeconds) * 100
-        )
-      );
-
-      setLocalProgress((prev) => (watched > prev ? watched : prev));
-
-      milestoneSteps.forEach((step) => {
-        if (watched >= step) {
-          pushTrackedMilestone(step);
-        }
-      });
-
-      if (watched >= 100 && !driveEndedTriggeredRef.current) {
-        driveEndedTriggeredRef.current = true;
-        handleCompletionFlow();
-      }
-    }, 1000);
-  };
-
-  useEffect(() => {
-    if (!isIframeVideo || !selectedVideo?.id) return;
-
-    if (isDriveTrackingPlaying) {
-      startDriveTrackingInterval();
-    } else {
-      stopDriveTrackingInterval();
-    }
-
-    return () => {
-      stopDriveTrackingInterval();
-    };
-  }, [
-    isIframeVideo,
-    selectedVideo,
-    isDriveTrackingPlaying,
-    derivedDriveDurationSeconds,
-    milestoneSteps,
-  ]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        stopDriveTrackingInterval();
-      } else if (isIframeVideo && isDriveTrackingPlaying) {
-        startDriveTrackingInterval();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [isIframeVideo, isDriveTrackingPlaying, derivedDriveDurationSeconds]);
-
-  const handleDriveTrackingPlayPause = () => {
-    if (!isIframeVideo) return;
-    setIsDriveTrackingPlaying((prev) => !prev);
-  };
-
-  const handleManualProgress = (percent) => {
-    setLocalProgress((prev) => (percent > prev ? percent : prev));
-    pushTrackedMilestone(percent);
-    onMarkDemoProgress?.(percent);
-
-    if (isIframeVideo && derivedDriveDurationSeconds > 0) {
-      const mappedSeconds = Math.floor(
-        (percent / 100) * derivedDriveDurationSeconds
-      );
-      driveElapsedSecondsRef.current = mappedSeconds;
-      setDriveElapsedSeconds(mappedSeconds);
-    }
-
-    if (percent >= 100) {
-      driveEndedTriggeredRef.current = true;
-      handleCompletionFlow();
-    }
   };
 
   const handlePreventContextMenu = (event) => {
@@ -486,6 +401,7 @@ function VideoPlayerSection({
             src={rawVideoUrl}
             onLoadedMetadata={handleLoadedMetadata}
             onTimeUpdate={handleTimeUpdate}
+            onSeeked={handleSeeked}
             onEnded={handleEndedInternal}
           >
             Your browser does not support the video tag.
@@ -494,59 +410,14 @@ function VideoPlayerSection({
       </div>
 
       <div className="video-player-controls-note premium-chip-row">
-        {isIframeVideo ? (
+        {isDirectVideo ? (
           <>
-            <button
-              type="button"
-              className="player-feature-chip"
-              onClick={handleDriveTrackingPlayPause}
-              style={{
-                border: "none",
-                cursor: "pointer",
-                background: isDriveTrackingPlaying
-                  ? "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)"
-                  : "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
-                color: isDriveTrackingPlaying ? "#166534" : "#991b1b",
-                fontWeight: 800,
-                boxShadow: isDriveTrackingPlaying
-                  ? "0 8px 20px rgba(34,197,94,0.18)"
-                  : "0 8px 20px rgba(239,68,68,0.16)",
-              }}
-            >
-              {isDriveTrackingPlaying ? "Pause Tracking" : "Play Tracking"}
-            </button>
-
-            <div
-              className="player-feature-chip"
-              style={{
-                background: isDriveTrackingPlaying
-                  ? "linear-gradient(135deg, #166534 0%, #22c55e 100%)"
-                  : "linear-gradient(135deg, #7f1d1d 0%, #ef4444 100%)",
-                color: "#fff",
-                fontWeight: 800,
-                boxShadow: isDriveTrackingPlaying
-                  ? "0 10px 24px rgba(34,197,94,0.25)"
-                  : "0 10px 24px rgba(239,68,68,0.22)",
-              }}
-            >
-              {isDriveTrackingPlaying ? "Tracking Live" : "Tracking Paused"}
-            </div>
-
-            <div
-              className="player-feature-chip"
-              style={{
-                background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-                color: "#1d4ed8",
-                fontWeight: 800,
-                boxShadow: "0 8px 20px rgba(59,130,246,0.14)",
-              }}
-            >
-              {formatSeconds(driveElapsedSeconds)} /{" "}
-              {formatSeconds(derivedDriveDurationSeconds)}
-            </div>
+            <div className="player-feature-chip">Auto Progress Active</div>
+            <div className="player-feature-chip">Anti-Skip Enabled</div>
+            <div className="player-feature-chip">Resume Enabled</div>
           </>
         ) : (
-          <div className="player-feature-chip">Play / Pause</div>
+          <div className="player-feature-chip">Embed Playback Only</div>
         )}
 
         <div className="player-feature-chip">Replay</div>
@@ -582,40 +453,6 @@ function VideoPlayerSection({
           {nextCountdown > 1 ? "s" : ""}
         </div>
       )}
-
-      <div className="video-demo-progress-row">
-        <button
-          type="button"
-          className="demo-progress-btn elite-focus-ring"
-          onClick={() => handleManualProgress(25)}
-        >
-          Mark 25%
-        </button>
-
-        <button
-          type="button"
-          className="demo-progress-btn elite-focus-ring"
-          onClick={() => handleManualProgress(50)}
-        >
-          Mark 50%
-        </button>
-
-        <button
-          type="button"
-          className="demo-progress-btn elite-focus-ring"
-          onClick={() => handleManualProgress(80)}
-        >
-          Mark 80%
-        </button>
-
-        <button
-          type="button"
-          className="demo-progress-btn primary elite-focus-ring"
-          onClick={() => handleManualProgress(100)}
-        >
-          Mark 100%
-        </button>
-      </div>
 
       <div className="video-player-actions premium-video-actions">
         <button
@@ -670,26 +507,20 @@ function VideoPlayerSection({
         <div className="video-info-card premium-info-card">
           <h4>Tracking Mode</h4>
           <p>
-            {isGoogleDriveVideo
-              ? `Custom duration-based Google Drive tracking is active using "${
-                  selectedVideo.duration || "10 min"
-                }" duration. Use Play Tracking / Pause Tracking to control timer.`
-              : isYouTubeVideo
-              ? `Custom duration-based YouTube tracking is active using "${
-                  selectedVideo.duration || "10 min"
-                }" duration. Use Play Tracking / Pause Tracking to control timer.`
-              : "This video now tracks real watch milestones and updates course progress progressively."}
+            {isDirectVideo
+              ? "Automatic real watch tracking with anti-skip protection and resume playback is active for this direct video source."
+              : "This embedded source plays correctly, but exact automatic watch tracking is not available in the current iframe-based setup."}
           </p>
         </div>
       </div>
 
       <div className="video-player-feature-note premium-feature-note">
         <p>
-          {isGoogleDriveVideo
-            ? "Google Drive videos now use custom duration-based tracking. Timer starts only when you press Play Tracking and pauses when you press Pause Tracking or leave the tab."
+          {isDirectVideo
+            ? "Direct hosted videos now use automatic real playback tracking with anti-skip protection and resume-from-last-position support."
             : isYouTubeVideo
-            ? "YouTube videos now run in embedded mode. Direct file download is not exposed from your app, and progress tracking works through the custom timer flow."
-            : "Direct videos now use a more protected player mode with nodownload enabled. Next upgrade can add resume position, speed memory, and stronger anti-skip tracking."}
+            ? "YouTube videos are running in embedded mode. Playback works, but exact automatic progress tracking is not supported in this current setup."
+            : "Google Drive videos are running in embedded mode. Playback works, but exact automatic progress tracking is not supported in this current setup."}
         </p>
       </div>
     </div>

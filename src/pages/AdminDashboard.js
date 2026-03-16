@@ -48,7 +48,7 @@ function AdminDashboard() {
   const [userDateFrom, setUserDateFrom] = useState("");
   const [userDateTo, setUserDateTo] = useState("");
   const [usersPage, setUsersPage] = useState(1);
-  const [usersLimit] = useState(10);
+  const usersLimit = 10;
   const [usersTotalPages, setUsersTotalPages] = useState(1);
   const [usersTotal, setUsersTotal] = useState(0);
 
@@ -58,7 +58,7 @@ function AdminDashboard() {
   const [purchaseDateFrom, setPurchaseDateFrom] = useState("");
   const [purchaseDateTo, setPurchaseDateTo] = useState("");
   const [purchasesPage, setPurchasesPage] = useState(1);
-  const [purchasesLimit] = useState(10);
+  const purchasesLimit = 10;
   const [purchasesTotalPages, setPurchasesTotalPages] = useState(1);
   const [purchasesTotal, setPurchasesTotal] = useState(0);
 
@@ -75,6 +75,7 @@ function AdminDashboard() {
 
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
+
     setTimeout(() => {
       setToast({ show: false, type: "success", message: "" });
     }, 3000);
@@ -84,6 +85,7 @@ function AdminDashboard() {
     if (!value) return "N/A";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "N/A";
+
     return date.toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
@@ -95,6 +97,7 @@ function AdminDashboard() {
     if (!value) return "Never";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "Never";
+
     return date.toLocaleString("en-IN", {
       day: "2-digit",
       month: "short",
@@ -119,11 +122,13 @@ function AdminDashboard() {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
+
     link.href = blobUrl;
     link.download = fileName;
     document.body.appendChild(link);
     link.click();
     link.remove();
+
     window.URL.revokeObjectURL(blobUrl);
     showToast("success", `${fileName} exported successfully`);
   };
@@ -198,8 +203,8 @@ function AdminDashboard() {
 
   const fetchOverview = async () => {
     const { data } = await API.get("/admin/overview");
-    setStats(data.stats || {});
-    setRecentInternships(data.recentInternships || []);
+    setStats(data?.stats || {});
+    setRecentInternships(data?.recentInternships || []);
   };
 
   const fetchUsers = async ({
@@ -210,6 +215,7 @@ function AdminDashboard() {
     to = userDateTo,
   } = {}) => {
     setUsersLoading(true);
+
     try {
       const { data } = await API.get("/admin/users", {
         params: {
@@ -222,9 +228,9 @@ function AdminDashboard() {
         },
       });
 
-      setRecentUsers(data.items || []);
-      setUsersTotalPages(data.totalPages || 1);
-      setUsersTotal(data.total || 0);
+      setRecentUsers(data?.items || []);
+      setUsersTotalPages(data?.totalPages || 1);
+      setUsersTotal(data?.total || 0);
     } finally {
       setUsersLoading(false);
     }
@@ -239,6 +245,7 @@ function AdminDashboard() {
     to = purchaseDateTo,
   } = {}) => {
     setPurchasesLoading(true);
+
     try {
       const { data } = await API.get("/admin/purchases", {
         params: {
@@ -252,9 +259,9 @@ function AdminDashboard() {
         },
       });
 
-      setRecentPurchases(data.items || []);
-      setPurchasesTotalPages(data.totalPages || 1);
-      setPurchasesTotal(data.total || 0);
+      setRecentPurchases(data?.items || []);
+      setPurchasesTotalPages(data?.totalPages || 1);
+      setPurchasesTotal(data?.total || 0);
     } finally {
       setPurchasesLoading(false);
     }
@@ -263,7 +270,11 @@ function AdminDashboard() {
   const fetchAll = async () => {
     try {
       setLoading(true);
-      await Promise.all([fetchOverview(), fetchUsers({ page: 1 }), fetchPurchases({ page: 1 })]);
+      await Promise.all([
+        fetchOverview(),
+        fetchUsers({ page: 1 }),
+        fetchPurchases({ page: 1 }),
+      ]);
     } catch (error) {
       console.error("Failed to fetch admin dashboard data:", error);
       showToast("error", "Failed to fetch admin dashboard data");
@@ -323,6 +334,50 @@ function AdminDashboard() {
     } catch (error) {
       console.error("Purchase search failed:", error);
       showToast("error", "Failed to search purchases");
+    }
+  };
+
+  const resetUsersFilters = async () => {
+    try {
+      setUserSearch("");
+      setUserRoleFilter("All");
+      setUserDateFrom("");
+      setUserDateTo("");
+      setUsersPage(1);
+
+      await fetchUsers({
+        page: 1,
+        search: "",
+        role: "All",
+        from: "",
+        to: "",
+      });
+    } catch (error) {
+      console.error("Users reset failed:", error);
+      showToast("error", "Failed to reset users");
+    }
+  };
+
+  const resetPurchasesFilters = async () => {
+    try {
+      setPurchaseSearch("");
+      setPaymentFilter("All");
+      setCertificateFilter("All");
+      setPurchaseDateFrom("");
+      setPurchaseDateTo("");
+      setPurchasesPage(1);
+
+      await fetchPurchases({
+        page: 1,
+        search: "",
+        paymentStatus: "All",
+        certificateStatus: "All",
+        from: "",
+        to: "",
+      });
+    } catch (error) {
+      console.error("Purchases reset failed:", error);
+      showToast("error", "Failed to reset purchases");
     }
   };
 
@@ -406,7 +461,7 @@ function AdminDashboard() {
         showToast("success", data?.message || "Certificate data loaded");
       }
     } catch (error) {
-      console.error("Resend certificate failed:", error);
+      console.error("Certificate action failed:", error);
       showToast(
         "error",
         error?.response?.data?.message || "Failed to fetch certificate"
@@ -504,6 +559,7 @@ function AdminDashboard() {
         </span>
       );
     }
+
     if (paymentStatus === "failed") {
       return (
         <span className="badge bg-danger-subtle text-danger border rounded-pill px-3 py-2">
@@ -511,6 +567,7 @@ function AdminDashboard() {
         </span>
       );
     }
+
     return (
       <span className="badge bg-secondary-subtle text-dark border rounded-pill px-3 py-2">
         Created
@@ -997,26 +1054,47 @@ function AdminDashboard() {
             </p>
 
             <div className="row g-4">
-              {recentInternships.map((item) => (
-                <div className="col-md-6 col-xl-4" key={item._id}>
-                  <div className="admin-recent-card">
-                    <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-2">
-                      <h5 className="admin-recent-title mb-0">{item.title}</h5>
-                      <div>{getProgramStatusBadge(item.isActive)}</div>
+              {recentInternships.length > 0 ? (
+                recentInternships.map((item) => (
+                  <div className="col-md-6 col-xl-4" key={item._id}>
+                    <div className="admin-recent-card">
+                      <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-2">
+                        <h5 className="admin-recent-title mb-0">{item.title}</h5>
+                        <div>{getProgramStatusBadge(item.isActive)}</div>
+                      </div>
+
+                      <p className="admin-mini-text mb-1">
+                        <strong>Branch:</strong> {item.branch || "N/A"}
+                      </p>
+                      <p className="admin-mini-text mb-1">
+                        <strong>Category:</strong> {item.category || "N/A"}
+                      </p>
+                      <p className="admin-mini-text mb-1">
+                        <strong>Modules:</strong> {item.modulesCount || 0}
+                      </p>
+                      <p className="admin-mini-text mb-1">
+                        <strong>Videos:</strong> {item.videosCount || 0}
+                      </p>
+                      <p className="admin-mini-text mb-3">
+                        <strong>Quiz:</strong> {item.quizCount || 0}
+                      </p>
+
+                      <Link
+                        to="/admin/internships"
+                        className="btn btn-outline-dark admin-action-btn w-100"
+                      >
+                        Open Manager
+                      </Link>
                     </div>
-
-                    <p className="admin-mini-text mb-1"><strong>Branch:</strong> {item.branch || "N/A"}</p>
-                    <p className="admin-mini-text mb-1"><strong>Category:</strong> {item.category || "N/A"}</p>
-                    <p className="admin-mini-text mb-1"><strong>Modules:</strong> {item.modulesCount || 0}</p>
-                    <p className="admin-mini-text mb-1"><strong>Videos:</strong> {item.videosCount || 0}</p>
-                    <p className="admin-mini-text mb-3"><strong>Quiz:</strong> {item.quizCount || 0}</p>
-
-                    <Link to="/admin/internships" className="btn btn-outline-dark admin-action-btn w-100">
-                      Open Manager
-                    </Link>
+                  </div>
+                ))
+              ) : (
+                <div className="col-12">
+                  <div className="admin-recent-card text-center text-secondary">
+                    No recent internships found.
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -1028,6 +1106,7 @@ function AdminDashboard() {
                   Server-side filtered and paginated users list.
                 </p>
               </div>
+
               <button
                 className="btn btn-outline-primary admin-action-btn"
                 type="button"
@@ -1045,6 +1124,7 @@ function AdminDashboard() {
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
               />
+
               <select
                 className="form-select admin-select"
                 value={userRoleFilter}
@@ -1054,18 +1134,21 @@ function AdminDashboard() {
                 <option value="Admin">Admin</option>
                 <option value="User">User</option>
               </select>
+
               <input
                 type="date"
                 className="form-control admin-input"
                 value={userDateFrom}
                 onChange={(e) => setUserDateFrom(e.target.value)}
               />
+
               <input
                 type="date"
                 className="form-control admin-input"
                 value={userDateTo}
                 onChange={(e) => setUserDateTo(e.target.value)}
               />
+
               <button
                 className="btn btn-outline-primary admin-action-btn"
                 type="button"
@@ -1073,26 +1156,11 @@ function AdminDashboard() {
               >
                 Search
               </button>
+
               <button
                 className="btn btn-outline-dark admin-action-btn"
                 type="button"
-                onClick={() => {
-                  setUserSearch("");
-                  setUserRoleFilter("All");
-                  setUserDateFrom("");
-                  setUserDateTo("");
-                  setUsersPage(1);
-                  fetchUsers({
-                    page: 1,
-                    search: "",
-                    role: "All",
-                    from: "",
-                    to: "",
-                  }).catch((error) => {
-                    console.error(error);
-                    showToast("error", "Failed to reset users");
-                  });
-                }}
+                onClick={resetUsersFilters}
               >
                 Reset
               </button>
@@ -1178,9 +1246,11 @@ function AdminDashboard() {
               >
                 Prev
               </button>
+
               <span className="fw-semibold">
                 Page {usersPage} / {usersTotalPages}
               </span>
+
               <button
                 className="btn btn-outline-dark"
                 disabled={usersPage >= usersTotalPages}
@@ -1199,6 +1269,7 @@ function AdminDashboard() {
                   Server-side filtered and paginated purchases list.
                 </p>
               </div>
+
               <button
                 className="btn btn-outline-primary admin-action-btn"
                 type="button"
@@ -1216,6 +1287,7 @@ function AdminDashboard() {
                 value={purchaseSearch}
                 onChange={(e) => setPurchaseSearch(e.target.value)}
               />
+
               <select
                 className="form-select admin-select"
                 value={paymentFilter}
@@ -1226,6 +1298,7 @@ function AdminDashboard() {
                 <option value="Failed">Failed</option>
                 <option value="Created">Created</option>
               </select>
+
               <select
                 className="form-select admin-select"
                 value={certificateFilter}
@@ -1235,18 +1308,21 @@ function AdminDashboard() {
                 <option value="Issued">Issued</option>
                 <option value="Not Issued">Not Issued</option>
               </select>
+
               <input
                 type="date"
                 className="form-control admin-input"
                 value={purchaseDateFrom}
                 onChange={(e) => setPurchaseDateFrom(e.target.value)}
               />
+
               <input
                 type="date"
                 className="form-control admin-input"
                 value={purchaseDateTo}
                 onChange={(e) => setPurchaseDateTo(e.target.value)}
               />
+
               <button
                 className="btn btn-outline-primary admin-action-btn"
                 type="button"
@@ -1260,25 +1336,7 @@ function AdminDashboard() {
               <button
                 className="btn btn-outline-dark admin-action-btn"
                 type="button"
-                onClick={() => {
-                  setPurchaseSearch("");
-                  setPaymentFilter("All");
-                  setCertificateFilter("All");
-                  setPurchaseDateFrom("");
-                  setPurchaseDateTo("");
-                  setPurchasesPage(1);
-                  fetchPurchases({
-                    page: 1,
-                    search: "",
-                    paymentStatus: "All",
-                    certificateStatus: "All",
-                    from: "",
-                    to: "",
-                  }).catch((error) => {
-                    console.error(error);
-                    showToast("error", "Failed to reset purchases");
-                  });
-                }}
+                onClick={resetPurchasesFilters}
               >
                 Reset Purchase Filters
               </button>
@@ -1345,18 +1403,28 @@ function AdminDashboard() {
                         <td>
                           {getYesNoBadge(
                             item.quiz?.passed,
-                            item.quiz?.percentage ? `Passed (${item.quiz.percentage}%)` : "Passed",
+                            item.quiz?.percentage
+                              ? `Passed (${item.quiz.percentage}%)`
+                              : "Passed",
                             "Pending"
                           )}
                         </td>
                         <td>
-                          {getYesNoBadge(item.progress?.certificateEligible, "Eligible", "Locked")}
+                          {getYesNoBadge(
+                            item.progress?.certificateEligible,
+                            "Eligible",
+                            "Locked"
+                          )}
                         </td>
                         <td>
                           {item.certificate?.certificateId ? (
                             <div>
-                              <div className="admin-user-name">{item.certificate.certificateId}</div>
-                              <div className="admin-user-email">{formatDate(item.certificate.issuedAt)}</div>
+                              <div className="admin-user-name">
+                                {item.certificate.certificateId}
+                              </div>
+                              <div className="admin-user-email">
+                                {formatDate(item.certificate.issuedAt)}
+                              </div>
                             </div>
                           ) : (
                             <span className="badge bg-secondary-subtle text-dark border rounded-pill px-3 py-2">
@@ -1377,7 +1445,9 @@ function AdminDashboard() {
                             <button
                               className="btn btn-outline-success admin-view-btn"
                               type="button"
-                              onClick={() => handleUpdatePurchaseStatus(item._id, "paid")}
+                              onClick={() =>
+                                handleUpdatePurchaseStatus(item._id, "paid")
+                              }
                             >
                               Mark Paid
                             </button>
@@ -1385,7 +1455,9 @@ function AdminDashboard() {
                             <button
                               className="btn btn-outline-danger admin-view-btn"
                               type="button"
-                              onClick={() => handleUpdatePurchaseStatus(item._id, "failed")}
+                              onClick={() =>
+                                handleUpdatePurchaseStatus(item._id, "failed")
+                              }
                             >
                               Mark Failed
                             </button>
@@ -1420,9 +1492,11 @@ function AdminDashboard() {
               >
                 Prev
               </button>
+
               <span className="fw-semibold">
                 Page {purchasesPage} / {purchasesTotalPages}
               </span>
+
               <button
                 className="btn btn-outline-dark"
                 disabled={purchasesPage >= purchasesTotalPages}
@@ -1470,17 +1544,27 @@ function AdminDashboard() {
               <div className="col-md-6">
                 <div className="admin-info-box">
                   <h5 className="fw-bold mb-3">Profile Details</h5>
-                  <p className="mb-2"><strong>Email:</strong> {selectedUser.email || "N/A"}</p>
-                  <p className="mb-2"><strong>Joined:</strong> {formatDate(selectedUser.createdAt)}</p>
-                  <p className="mb-0"><strong>Last Login:</strong> {formatDateTime(selectedUser.lastLoginAt)}</p>
+                  <p className="mb-2">
+                    <strong>Email:</strong> {selectedUser.email || "N/A"}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Joined:</strong> {formatDate(selectedUser.createdAt)}
+                  </p>
+                  <p className="mb-0">
+                    <strong>Last Login:</strong> {formatDateTime(selectedUser.lastLoginAt)}
+                  </p>
                 </div>
               </div>
 
               <div className="col-md-6">
                 <div className="admin-info-box">
                   <h5 className="fw-bold mb-3">Performance Summary</h5>
-                  <p className="mb-2"><strong>Total Purchases:</strong> {selectedUser.purchasesCount || 0}</p>
-                  <p className="mb-0"><strong>Total Certificates:</strong> {selectedUser.certificatesCount || 0}</p>
+                  <p className="mb-2">
+                    <strong>Total Purchases:</strong> {selectedUser.purchasesCount || 0}
+                  </p>
+                  <p className="mb-0">
+                    <strong>Total Certificates:</strong> {selectedUser.certificatesCount || 0}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1509,14 +1593,18 @@ function AdminDashboard() {
               <div className="d-flex gap-2 flex-wrap">
                 <button
                   className="btn btn-outline-success admin-action-btn"
-                  onClick={() => handleUpdatePurchaseStatus(selectedPurchase._id, "paid")}
+                  onClick={() =>
+                    handleUpdatePurchaseStatus(selectedPurchase._id, "paid")
+                  }
                 >
                   Mark Paid
                 </button>
 
                 <button
                   className="btn btn-outline-danger admin-action-btn"
-                  onClick={() => handleUpdatePurchaseStatus(selectedPurchase._id, "failed")}
+                  onClick={() =>
+                    handleUpdatePurchaseStatus(selectedPurchase._id, "failed")
+                  }
                 >
                   Mark Failed
                 </button>
@@ -1541,18 +1629,30 @@ function AdminDashboard() {
               <div className="col-md-6">
                 <div className="admin-info-box">
                   <h5 className="fw-bold mb-3">User Info</h5>
-                  <p className="mb-2"><strong>Name:</strong> {selectedPurchase.user?.name || "Unknown User"}</p>
-                  <p className="mb-2"><strong>Email:</strong> {selectedPurchase.user?.email || "N/A"}</p>
-                  <p className="mb-0"><strong>Last Login:</strong> {formatDateTime(selectedPurchase.user?.lastLoginAt)}</p>
+                  <p className="mb-2">
+                    <strong>Name:</strong> {selectedPurchase.user?.name || "Unknown User"}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Email:</strong> {selectedPurchase.user?.email || "N/A"}
+                  </p>
+                  <p className="mb-0">
+                    <strong>Last Login:</strong> {formatDateTime(selectedPurchase.user?.lastLoginAt)}
+                  </p>
                 </div>
               </div>
 
               <div className="col-md-6">
                 <div className="admin-info-box">
                   <h5 className="fw-bold mb-3">Internship Info</h5>
-                  <p className="mb-2"><strong>Branch:</strong> {selectedPurchase.internship?.branch || "N/A"}</p>
-                  <p className="mb-2"><strong>Category:</strong> {selectedPurchase.internship?.category || "N/A"}</p>
-                  <p className="mb-0"><strong>Duration:</strong> {selectedPurchase.durationLabel || "N/A"}</p>
+                  <p className="mb-2">
+                    <strong>Branch:</strong> {selectedPurchase.internship?.branch || "N/A"}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Category:</strong> {selectedPurchase.internship?.category || "N/A"}
+                  </p>
+                  <p className="mb-0">
+                    <strong>Duration:</strong> {selectedPurchase.durationLabel || "N/A"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1561,27 +1661,48 @@ function AdminDashboard() {
               <div className="col-md-4">
                 <div className="admin-info-box">
                   <h5 className="fw-bold mb-3">Payment</h5>
-                  <p className="mb-2"><strong>Amount:</strong> ₹{selectedPurchase.amount || 0}</p>
-                  <p className="mb-2"><strong>Status:</strong> {selectedPurchase.paymentStatus || "N/A"}</p>
-                  <p className="mb-0"><strong>Date:</strong> {formatDate(selectedPurchase.createdAt)}</p>
+                  <p className="mb-2">
+                    <strong>Amount:</strong> ₹{selectedPurchase.amount || 0}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Status:</strong> {selectedPurchase.paymentStatus || "N/A"}
+                  </p>
+                  <p className="mb-0">
+                    <strong>Date:</strong> {formatDate(selectedPurchase.createdAt)}
+                  </p>
                 </div>
               </div>
 
               <div className="col-md-4">
                 <div className="admin-info-box">
                   <h5 className="fw-bold mb-3">Learning</h5>
-                  <p className="mb-2"><strong>Progress:</strong> {selectedPurchase.progress?.overallProgress || 0}%</p>
-                  <p className="mb-2"><strong>Quiz:</strong> {selectedPurchase.quiz?.passed ? "Passed" : "Pending"}</p>
-                  <p className="mb-0"><strong>Duration Rule:</strong> {selectedPurchase.progress?.durationCompleted ? "Completed" : "Pending"}</p>
+                  <p className="mb-2">
+                    <strong>Progress:</strong> {selectedPurchase.progress?.overallProgress || 0}%
+                  </p>
+                  <p className="mb-2">
+                    <strong>Quiz:</strong> {selectedPurchase.quiz?.passed ? "Passed" : "Pending"}
+                  </p>
+                  <p className="mb-0">
+                    <strong>Duration Rule:</strong>{" "}
+                    {selectedPurchase.progress?.durationCompleted ? "Completed" : "Pending"}
+                  </p>
                 </div>
               </div>
 
               <div className="col-md-4">
                 <div className="admin-info-box">
                   <h5 className="fw-bold mb-3">Certificate</h5>
-                  <p className="mb-2"><strong>Eligible:</strong> {selectedPurchase.progress?.certificateEligible ? "Yes" : "No"}</p>
-                  <p className="mb-2"><strong>Issued:</strong> {selectedPurchase.certificate?.certificateId ? "Yes" : "No"}</p>
-                  <p className="mb-0"><strong>ID:</strong> {selectedPurchase.certificate?.certificateId || "N/A"}</p>
+                  <p className="mb-2">
+                    <strong>Eligible:</strong>{" "}
+                    {selectedPurchase.progress?.certificateEligible ? "Yes" : "No"}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Issued:</strong>{" "}
+                    {selectedPurchase.certificate?.certificateId ? "Yes" : "No"}
+                  </p>
+                  <p className="mb-0">
+                    <strong>ID:</strong> {selectedPurchase.certificate?.certificateId || "N/A"}
+                  </p>
                 </div>
               </div>
             </div>
