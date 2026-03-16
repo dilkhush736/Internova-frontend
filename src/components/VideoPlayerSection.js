@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import "./VideoPlayerSection.css";
 import {
   convertVideoUrlToEmbedUrl,
   isGoogleDriveLink,
@@ -47,7 +48,6 @@ function VideoPlayerSection({
 
   const requiredWatchPercent = 80;
   const milestoneSteps = useMemo(() => [10, 25, 50, 80, 100], []);
-  const segmentTargets = useMemo(() => [25, 50, 75, 100], []);
   const segmentCompletionThreshold = 0.65;
 
   const resumeStorageKey = useMemo(() => {
@@ -201,10 +201,7 @@ function VideoPlayerSection({
 
     for (let i = 0; i < 4; i += 1) {
       const start = Math.floor(i * segmentSize);
-      const end =
-        i === 3
-          ? totalSeconds
-          : Math.floor((i + 1) * segmentSize);
+      const end = i === 3 ? totalSeconds : Math.floor((i + 1) * segmentSize);
 
       const segmentLength = Math.max(1, end - start);
       let watchedInSegment = 0;
@@ -378,156 +375,54 @@ function VideoPlayerSection({
   return (
     <div className="video-player-card premium-video-card position-relative">
       {toast.show && (
-        <div
-          style={{
-            position: "fixed",
-            top: "96px",
-            right: "24px",
-            zIndex: 99999,
-            minWidth: "280px",
-            maxWidth: "380px",
-          }}
-        >
-          <div
-            className="shadow-lg rounded-4 px-4 py-3"
-            style={{
-              background:
-                toast.type === "success"
-                  ? "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)"
-                  : "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
-              border:
-                toast.type === "success"
-                  ? "1px solid #86efac"
-                  : "1px solid #fca5a5",
-            }}
-          >
-            <div
-              className={`fw-bold mb-1 ${
-                toast.type === "success" ? "text-success" : "text-danger"
-              }`}
-            >
+        <div className="video-toast-container">
+          <div className={`video-toast-box ${toast.type === "success" ? "success" : "error"}`}>
+            <div className={`video-toast-title ${toast.type === "success" ? "success" : "error"}`}>
               {toast.type === "success" ? "Success" : "Error"}
             </div>
-            <div className="text-dark small">{toast.message}</div>
+            <div className="video-toast-message">{toast.message}</div>
           </div>
         </div>
       )}
 
-      <div
-        style={{
-          marginBottom: "18px",
-          padding: "16px 18px",
-          borderRadius: "22px",
-          background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-          border: "1px solid rgba(148,163,184,0.20)",
-          boxShadow: "0 12px 34px rgba(15,23,42,0.07)",
-        }}
-      >
-        <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+      <div className="video-progress-summary-card">
+        <div className="video-progress-summary-top">
           <div>
-            <div
-              style={{
-                fontSize: "0.78rem",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                fontWeight: 800,
-                color: "#2563eb",
-                marginBottom: "6px",
-              }}
-            >
-              Smart Progress Tracking
-            </div>
-            <div
-              style={{
-                fontSize: "1rem",
-                fontWeight: 800,
-                color: "#0f172a",
-              }}
-            >
+            <div className="video-progress-summary-label">Smart Progress Tracking</div>
+            <div className="video-progress-summary-title">
               Verified Segment Progress: {localProgress}%
             </div>
           </div>
 
-          <div className="d-flex flex-wrap gap-2">
+          <div className="video-progress-badges">
             <span
-              className="badge rounded-pill px-3 py-2"
-              style={{
-                background: isEligibleComplete
-                  ? "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)"
-                  : "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-                color: isEligibleComplete ? "#166534" : "#1d4ed8",
-                border: isEligibleComplete
-                  ? "1px solid #86efac"
-                  : "1px solid #93c5fd",
-                fontWeight: 800,
-              }}
+              className={`video-status-badge ${
+                isEligibleComplete ? "completed" : "progress"
+              }`}
             >
               {isEligibleComplete ? "Completion Unlocked" : "Still Watching"}
             </span>
 
-            <span
-              className="badge rounded-pill px-3 py-2"
-              style={{
-                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-                color: "#334155",
-                border: "1px solid #cbd5e1",
-                fontWeight: 800,
-              }}
-            >
-              4 Smart Segments
-            </span>
+            <span className="video-status-badge neutral">4 Smart Segments</span>
           </div>
         </div>
 
-        <div
-          style={{
-            height: "12px",
-            width: "100%",
-            borderRadius: "999px",
-            background: "#e2e8f0",
-            overflow: "hidden",
-            boxShadow: "inset 0 1px 2px rgba(15,23,42,0.08)",
-          }}
-        >
+        <div className="video-progress-bar-track">
           <div
-            style={{
-              width: progressBarWidth,
-              height: "100%",
-              borderRadius: "999px",
-              background:
-                localProgress >= requiredWatchPercent
-                  ? "linear-gradient(90deg, #22c55e 0%, #16a34a 100%)"
-                  : "linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)",
-              transition: "width 0.35s ease",
-            }}
+            className={`video-progress-bar-fill ${
+              localProgress >= requiredWatchPercent ? "completed" : "progress"
+            }`}
+            style={{ width: progressBarWidth }}
           />
         </div>
 
-        <div className="d-flex flex-wrap justify-content-between gap-3 mt-3">
-          <small style={{ color: "#64748b", fontWeight: 700 }}>
+        <div className="video-progress-summary-bottom">
+          <small>
             Mode: {isDirectVideo ? "Direct Video Verified Tracking" : "Embedded Playback"}
           </small>
-          <small style={{ color: "#64748b", fontWeight: 700 }}>
+          <small>
             {videoDuration ? `Duration: ${formatDuration(videoDuration)}` : "Duration loading..."}
           </small>
-        </div>
-      </div>
-
-      <div className="video-player-header premium-video-header">
-        <div>
-          <p className="video-player-module">{selectedModule.title}</p>
-          <h3>{selectedVideo.title}</h3>
-          <span>{selectedVideo.description}</span>
-        </div>
-
-        <div className="video-player-status premium-video-status">
-          <span>
-            {selectedVideo.duration ||
-              (videoDuration ? formatDuration(videoDuration) : "Video")}
-          </span>
-          <strong>
-            {isEligibleComplete ? "Completed" : `${localProgress}% Verified`}
-          </strong>
         </div>
       </div>
 
@@ -536,22 +431,12 @@ function VideoPlayerSection({
         onContextMenu={handlePreventContextMenu}
       >
         {isIframeVideo ? (
-          <div
-            style={{
-              position: "relative",
-              width: "100%",
-              borderRadius: "24px",
-              overflow: "hidden",
-              background: "#000",
-              boxShadow: "0 22px 55px rgba(15,23,42,0.18)",
-              border: "1px solid rgba(148,163,184,0.18)",
-            }}
-          >
+          <div className="video-frame-shell">
             <iframe
               key={selectedVideo.id}
               src={embeddedVideoUrl}
               title={selectedVideo.title || "Course Video"}
-              className="internova-video-player"
+              className="internova-video-player video-embed-frame"
               allow={
                 isYouTubeVideo
                   ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -559,26 +444,10 @@ function VideoPlayerSection({
               }
               allowFullScreen
               referrerPolicy="strict-origin-when-cross-origin"
-              style={{
-                width: "100%",
-                height: "520px",
-                border: "none",
-                display: "block",
-                borderRadius: "24px",
-                background: "#000",
-              }}
             />
           </div>
         ) : (
-          <div
-            style={{
-              borderRadius: "24px",
-              overflow: "hidden",
-              background: "#000",
-              boxShadow: "0 22px 55px rgba(15,23,42,0.18)",
-              border: "1px solid rgba(148,163,184,0.18)",
-            }}
-          >
+          <div className="video-frame-shell">
             <video
               ref={videoRef}
               key={selectedVideo.id}
@@ -586,16 +455,11 @@ function VideoPlayerSection({
               controlsList="nodownload noplaybackrate"
               disablePictureInPicture
               onContextMenu={handlePreventContextMenu}
-              className="internova-video-player"
+              className="internova-video-player video-direct-player"
               src={rawVideoUrl}
               onLoadedMetadata={handleLoadedMetadata}
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleEndedInternal}
-              style={{
-                width: "100%",
-                display: "block",
-                background: "#000",
-              }}
             >
               Your browser does not support the video tag.
             </video>
@@ -632,19 +496,7 @@ function VideoPlayerSection({
       </div>
 
       {nextCountdown > 0 && hasNextVideo && (
-        <div
-          style={{
-            marginTop: "14px",
-            padding: "14px 18px",
-            borderRadius: "16px",
-            background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-            border: "1px solid #93c5fd",
-            color: "#1e3a8a",
-            fontWeight: 800,
-            textAlign: "center",
-            boxShadow: "0 12px 24px rgba(59,130,246,0.12)",
-          }}
-        >
+        <div className="video-next-countdown">
           Next video starts in {nextCountdown} second
           {nextCountdown > 1 ? "s" : ""}
         </div>
@@ -714,7 +566,7 @@ function VideoPlayerSection({
       <div className="video-player-feature-note premium-feature-note">
         <p>
           {isDirectVideo
-            ? "Premium segment-based playback validation is active. Progress now depends on watched coverage instead of just dragging the seekbar."
+            ? "Dear learner! you will have to completely watch all video, Progress depends on watched coverage instead of just dragging the seekbar."
             : isYouTubeVideo
             ? "YouTube is running in embedded mode. Playback works, but strict segment verification is not supported with iframe sources."
             : "Google Drive is running in embedded mode. Playback works, but strict segment verification is not supported with iframe sources."}
