@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   useLocation,
+  Navigate,
 } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -39,7 +40,7 @@ function AppLayout() {
   const location = useLocation();
 
   const hideLayoutRoutes = [
-    "/",
+    "/login",
     "/register",
     "/verify-email-otp",
     "/forgot-password",
@@ -54,12 +55,17 @@ function AppLayout() {
       {!shouldHideLayout && <Navbar />}
 
       <Routes>
-        <Route path="/" element={<Login />} />
+        {/* Public SEO-friendly main homepage */}
+        <Route path="/" element={<AboutUs />} />
+
+        {/* Auth routes */}
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email-otp" element={<VerifyEmailOtp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
+        {/* Protected user routes */}
         <Route
           path="/dashboard"
           element={
@@ -69,23 +75,9 @@ function AppLayout() {
           }
         />
 
-        <Route
-          path="/internships"
-          element={
-            <ProtectedRoute>
-              <Internships />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/internships" element={<Internships />} />
 
-        <Route
-          path="/internships/:id"
-          element={
-            <ProtectedRoute>
-              <InternshipDetails />
-            </ProtectedRoute>
-          }
-        />
+       <Route path="/internships/:id" element={<InternshipDetails />} />
 
         <Route
           path="/my-purchases"
@@ -115,15 +107,6 @@ function AppLayout() {
         />
 
         <Route
-          path="/admin/dashboard"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        />
-
-        <Route
           path="/certificate/:internshipId"
           element={
             <ProtectedRoute>
@@ -132,8 +115,19 @@ function AppLayout() {
           }
         />
 
+        {/* Public certificate verification */}
         <Route path="/verify" element={<VerifyCertificate />} />
         <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
+
+        {/* Admin routes */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
 
         <Route
           path="/admin/internships"
@@ -144,11 +138,15 @@ function AppLayout() {
           }
         />
 
+        {/* Public info pages */}
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="/refund-policy" element={<RefundPolicy />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       {!shouldHideLayout && <Footer />}

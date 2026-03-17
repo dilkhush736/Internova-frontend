@@ -45,9 +45,7 @@ function InternshipDetails() {
 
     return [
       {
-        label:
-          internship.duration ||
-          `${internship.durationDays || 30} Days`,
+        label: internship.duration || `${internship.durationDays || 30} Days`,
         price: internship.price || 0,
       },
     ];
@@ -71,15 +69,38 @@ function InternshipDetails() {
 
       setInternship(internshipData);
 
-      if (
-        internshipData?.durations?.length > 0 &&
-        !selectedDuration
-      ) {
+      if (internshipData?.title) {
+        document.title = `${internshipData.title} | InternovaTech Internship Program`;
+
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          const shortDescription =
+            internshipData.description?.length > 155
+              ? `${internshipData.description.slice(0, 152)}...`
+              : internshipData.description ||
+                `Explore the ${internshipData.title} internship program on InternovaTech with practical learning, assessments, and verified certificate support.`;
+
+          metaDescription.setAttribute("content", shortDescription);
+        }
+
+        let canonicalTag = document.querySelector('link[rel="canonical"]');
+        if (!canonicalTag) {
+          canonicalTag = document.createElement("link");
+          canonicalTag.setAttribute("rel", "canonical");
+          document.head.appendChild(canonicalTag);
+        }
+
+        canonicalTag.setAttribute(
+          "href",
+          `https://www.internovatech.com/internships/${internshipData._id || id}`
+        );
+      }
+
+      if (internshipData?.durations?.length > 0 && !selectedDuration) {
         setSelectedDuration(internshipData.durations[0].label);
       } else if (!selectedDuration) {
         setSelectedDuration(
-          internshipData?.duration ||
-            `${internshipData?.durationDays || 30} Days`
+          internshipData?.duration || `${internshipData?.durationDays || 30} Days`
         );
       }
     } catch (error) {
@@ -141,8 +162,15 @@ function InternshipDetails() {
   };
 
   useEffect(() => {
+    document.title = "Internship Program Details | InternovaTech";
+
     fetchInternship();
     checkCertificateEligibility();
+
+    return () => {
+      document.title =
+        "InternovaTech - Online Internships, Certificates and Tech Training";
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -150,7 +178,7 @@ function InternshipDetails() {
     try {
       if (!token) {
         showToast("error", "Please login first");
-        navigate("/");
+        navigate("/login");
         return;
       }
 
@@ -170,8 +198,8 @@ function InternshipDetails() {
         key: data.key,
         amount: data.order.amount,
         currency: data.order.currency,
-        name: "Internova",
-        description: `Internova - ${data.internship.title} (${data.duration.label})`,
+        name: "InternovaTech",
+        description: `InternovaTech - ${data.internship.title} (${data.duration.label})`,
         order_id: data.order.id,
         handler: async function (response) {
           try {
@@ -222,7 +250,7 @@ function InternshipDetails() {
     try {
       if (!token) {
         showToast("error", "Please login first");
-        navigate("/");
+        navigate("/login");
         return;
       }
 
@@ -269,7 +297,9 @@ function InternshipDetails() {
       >
         <div className="text-center">
           <div className="spinner-border text-dark mb-3" role="status"></div>
-          <div className="fw-semibold text-dark">Loading details...</div>
+          <div className="fw-semibold text-dark">
+            Loading InternovaTech program details...
+          </div>
         </div>
       </div>
     );
@@ -285,7 +315,7 @@ function InternshipDetails() {
         }}
       >
         <div className="text-center">
-          <div className="fw-bold text-dark mb-2">Internship not found</div>
+          <div className="fw-bold text-dark mb-2">Internship program not found</div>
           <div className="text-muted">Please go back and try again.</div>
         </div>
       </div>
@@ -648,7 +678,7 @@ function InternshipDetails() {
                       internship.thumbnail ||
                       "https://via.placeholder.com/600x350"
                     }
-                    alt={internship.title}
+                    alt={internship.title || "InternovaTech internship program"}
                     className="internship-main-image"
                   />
                   <div className="internship-image-overlay"></div>
@@ -659,7 +689,7 @@ function InternshipDetails() {
                 <div className="p-4 p-lg-5">
                   <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
                     <div>
-                      <h2 className="internship-title">{internship.title}</h2>
+                      <h1 className="internship-title">{internship.title}</h1>
                       <span className="badge bg-secondary internship-badge">
                         {internship.branch}
                       </span>
@@ -719,7 +749,7 @@ function InternshipDetails() {
                   ) : certificateEligible ? (
                     <div className="internship-status-card internship-status-success mb-4">
                       {eligibilityMessage ||
-                        "You are eligible to claim your certificate for this internship."}
+                        "You are eligible to claim your certificate for this internship program."}
                     </div>
                   ) : (
                     <div className="internship-status-card internship-status-warning mb-4">
@@ -756,18 +786,18 @@ function InternshipDetails() {
                     <h5 className="internship-card-title">What you get</h5>
                     <ul className="internship-list">
                       <li>Program access after successful enrollment</li>
-                      <li>Learning Access Letter download</li>
+                      <li>Learning access letter download</li>
                       <li>Course modules and progress tracking</li>
                       <li>Mini test and retake support</li>
                       <li>Certificate generation after eligibility</li>
-                      <li>Public certificate verification via ID / QR</li>
+                      <li>Public certificate verification via ID or QR</li>
                     </ul>
                   </div>
 
                   <p className="internship-note">
-                    After successful payment, this training program will appear in My
-                    Enrollments, where you can access the course, learning access letter,
-                    mini test, and certificate flow.
+                    After successful payment, this program will appear in My
+                    Enrollments, where you can access the course, learning access
+                    letter, mini test, and certificate workflow.
                   </p>
                 </div>
               </div>

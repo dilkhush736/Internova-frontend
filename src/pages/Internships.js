@@ -34,14 +34,51 @@ function Internships() {
       setInternships(data.internships || []);
     } catch (error) {
       console.error("Failed to fetch programs:", error);
-      showToast("error", "Failed to fetch programs");
+      showToast("error", "Failed to fetch internship programs");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    document.title =
+      "Online Internships | InternovaTech Programs and Training";
+
+    const metaDescription = document.querySelector('meta[name="description"]');
+    const previousDescription = metaDescription?.getAttribute("content") || "";
+
+    if (metaDescription) {
+      metaDescription.setAttribute(
+        "content",
+        "Explore InternovaTech online internships in Web Development, Data Science, Artificial Intelligence, Finance and more with structured training, assessments and verified certificates."
+      );
+    }
+
+    let canonicalTag = document.querySelector('link[rel="canonical"]');
+    const canonicalAlreadyExists = !!canonicalTag;
+
+    if (!canonicalTag) {
+      canonicalTag = document.createElement("link");
+      canonicalTag.setAttribute("rel", "canonical");
+      document.head.appendChild(canonicalTag);
+    }
+
+    canonicalTag.setAttribute("href", "https://www.internovatech.com/internships");
+
     fetchInternships();
+
+    return () => {
+      document.title =
+        "InternovaTech - Online Internships, Certificates and Tech Training";
+
+      if (metaDescription) {
+        metaDescription.setAttribute("content", previousDescription);
+      }
+
+      if (!canonicalAlreadyExists && canonicalTag) {
+        canonicalTag.remove();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -65,7 +102,7 @@ function Internships() {
   const filteredInternships = useMemo(() => {
     const query = localSearch.trim().toLowerCase();
 
-    let filtered = internships.filter((item) => {
+    const filtered = internships.filter((item) => {
       const title = item.title?.toLowerCase() || "";
       const branch = item.branch?.toLowerCase() || "";
       const category = item.category?.toLowerCase() || "";
@@ -88,17 +125,17 @@ function Internships() {
     });
 
     if (sortBy === "title-asc") {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
+      filtered.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
     } else if (sortBy === "price-low") {
       filtered.sort((a, b) => {
-        const aMin = Math.min(...(a.durations?.map((d) => d.price) || [0]));
-        const bMin = Math.min(...(b.durations?.map((d) => d.price) || [0]));
+        const aMin = Math.min(...(a.durations?.map((d) => Number(d.price) || 0) || [0]));
+        const bMin = Math.min(...(b.durations?.map((d) => Number(d.price) || 0) || [0]));
         return aMin - bMin;
       });
     } else if (sortBy === "price-high") {
       filtered.sort((a, b) => {
-        const aMax = Math.max(...(a.durations?.map((d) => d.price) || [0]));
-        const bMax = Math.max(...(b.durations?.map((d) => d.price) || [0]));
+        const aMax = Math.max(...(a.durations?.map((d) => Number(d.price) || 0) || [0]));
+        const bMax = Math.max(...(b.durations?.map((d) => Number(d.price) || 0) || [0]));
         return bMax - aMax;
       });
     }
@@ -126,7 +163,9 @@ function Internships() {
       >
         <div className="text-center">
           <div className="spinner-border text-dark mb-3" role="status"></div>
-          <div className="fw-semibold text-dark">Loading programs...</div>
+          <div className="fw-semibold text-dark">
+            Loading InternovaTech programs...
+          </div>
         </div>
       </div>
     );
@@ -476,7 +515,6 @@ function Internships() {
               style={{
                 position: "fixed",
                 top: "96px",
-                zIndex: 99999,
                 right: "24px",
                 zIndex: 9999,
                 minWidth: "280px",
@@ -497,8 +535,9 @@ function Internships() {
                 }}
               >
                 <div
-                  className={`fw-bold mb-1 ${toast.type === "success" ? "text-success" : "text-danger"
-                    }`}
+                  className={`fw-bold mb-1 ${
+                    toast.type === "success" ? "text-success" : "text-danger"
+                  }`}
                 >
                   {toast.type === "success" ? "Success" : "Error"}
                 </div>
@@ -507,17 +546,19 @@ function Internships() {
             </div>
           )}
 
-          {/* HERO */}
           <div className="card internships-hero border-0 rounded-5 mb-4">
             <div className="card-body p-4 p-md-5">
               <div className="row g-4 align-items-center">
                 <div className="col-lg-8">
-                  <div className="internships-chip">Internova Training Explorer</div>
+                  <div className="internships-chip">InternovaTech Program Explorer</div>
                   <h1 className="internships-hero-title">
-                    Explore Training Programs
+                    Explore Online Internship Programs
                   </h1>
                   <p className="internships-hero-text">
-                    Discover structured industry-focused training programs with guided learning, assessments, and certificate support.
+                    Discover InternovaTech internship programs with structured
+                    learning, practical skill development, assessments, progress
+                    tracking, and verified certificate support across in-demand
+                    domains.
                   </p>
                 </div>
 
@@ -544,9 +585,9 @@ function Internships() {
                         <div className="internships-stat-label">Filters</div>
                         <h4 className="internships-stat-value">
                           {branchFilter !== "All" ||
-                            categoryFilter !== "All" ||
-                            sortBy !== "default" ||
-                            localSearch
+                          categoryFilter !== "All" ||
+                          sortBy !== "default" ||
+                          localSearch
                             ? "Active"
                             : "Default"}
                         </h4>
@@ -558,37 +599,36 @@ function Internships() {
             </div>
           </div>
 
-          {/* FILTER CARD */}
           <div className="card internships-glass-card border-0 rounded-5 mb-4">
             <div className="card-body p-4 p-md-5">
               {(localSearch ||
                 branchFilter !== "All" ||
                 categoryFilter !== "All" ||
                 sortBy !== "default") && (
-                  <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-                    <div>
-                      <h4 className="internships-filter-title mb-1">
-                        Filtered Results
-                      </h4>
-                      <p className="internships-filter-subtitle">
-                        {localSearch ? (
-                          <>
-                            Search: <strong>{localSearch}</strong>
-                          </>
-                        ) : (
-                          "Using selected filters"
-                        )}
-                      </p>
-                    </div>
-
-                    <button
-                      className="btn btn-outline-dark internships-clear-btn"
-                      onClick={clearAllFilters}
-                    >
-                      Clear All
-                    </button>
+                <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                  <div>
+                    <h4 className="internships-filter-title mb-1">
+                      Filtered Results
+                    </h4>
+                    <p className="internships-filter-subtitle">
+                      {localSearch ? (
+                        <>
+                          Search: <strong>{localSearch}</strong>
+                        </>
+                      ) : (
+                        "Using selected filters"
+                      )}
+                    </p>
                   </div>
-                )}
+
+                  <button
+                    className="btn btn-outline-dark internships-clear-btn"
+                    onClick={clearAllFilters}
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
 
               <div className="row g-3">
                 <div className="col-md-12">
@@ -649,7 +689,6 @@ function Internships() {
             </div>
           </div>
 
-          {/* LISTING */}
           <div className="row g-4">
             {filteredInternships.map((item) => (
               <div className="col-md-6 col-xl-4" key={item._id}>
@@ -658,13 +697,13 @@ function Internships() {
                     <img
                       src={item.thumbnail || "https://via.placeholder.com/400x250"}
                       className="internship-card-image"
-                      alt={item.title}
+                      alt={item.title || "InternovaTech internship program"}
                     />
                   </div>
 
                   <div className="internship-card-body">
                     <div className="d-flex justify-content-between align-items-start mb-3 gap-2 flex-wrap">
-                      <h5 className="internship-card-title">{item.title}</h5>
+                      <h2 className="internship-card-title">{item.title}</h2>
                       <span className="badge bg-secondary internship-branch-badge">
                         {item.branch}
                       </span>
@@ -697,7 +736,7 @@ function Internships() {
                       to={`/internships/${item._id}`}
                       className="btn internship-card-btn w-100"
                     >
-                      View Details
+                      View Program Details
                     </Link>
                   </div>
                 </div>
@@ -707,10 +746,10 @@ function Internships() {
 
           {filteredInternships.length === 0 && (
             <div className="internships-empty-card mt-4">
-              <h5 className="fw-bold mb-2">No Internships Found</h5>
+              <h5 className="fw-bold mb-2">No Programs Found</h5>
               <p className="mb-0">
-                No internships matched your current search or filters. Try
-                changing the query or clearing all filters.
+                No internship programs matched your current search or filters.
+                Try changing the query or clearing all filters.
               </p>
             </div>
           )}

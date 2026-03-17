@@ -13,7 +13,7 @@ function Footer() {
       return;
     }
 
-    setMessage("Thanks for subscribing to Internova updates!");
+    setMessage("Thanks for subscribing to InternovaTech updates!");
     setEmail("");
 
     setTimeout(() => {
@@ -24,7 +24,7 @@ function Footer() {
   return (
     <>
       <style>{`
-        .internova-footer {
+        .internovatech-footer {
           position: relative;
           overflow: hidden;
           background:
@@ -34,7 +34,7 @@ function Footer() {
           border-top: 1px solid rgba(255,255,255,0.08);
         }
 
-        .internova-footer::before {
+        .internovatech-footer::before {
           content: "";
           position: absolute;
           inset: 0;
@@ -44,7 +44,7 @@ function Footer() {
           pointer-events: none;
         }
 
-        .internova-footer-shell {
+        .internovatech-footer-shell {
           position: relative;
           z-index: 2;
         }
@@ -253,7 +253,7 @@ function Footer() {
           color: #d1fae5;
         }
 
-        .internova-footer-bottom {
+        .internovatech-footer-bottom {
           border-top: 1px solid rgba(255,255,255,0.10);
         }
 
@@ -322,31 +322,31 @@ function Footer() {
         }
       `}</style>
 
-      <footer className="internova-footer">
-        <div className="container py-5 internova-footer-shell">
+      <footer className="internovatech-footer">
+        <div className="container py-5 internovatech-footer-shell">
           <div className="row g-4">
             <div className="col-lg-4">
               <div className="footer-top-card">
                 <div className="footer-brand-wrap">
                   <div className="footer-logo">I</div>
                   <div>
-                    <h4 className="footer-brand-title mb-0">Internova</h4>
+                    <h4 className="footer-brand-title mb-0">InternovaTech</h4>
                     <small className="footer-brand-sub">
-                      Learning & Certification Platform
+                      Online Internships & Certificate Platform
                     </small>
                   </div>
                 </div>
 
                 <p className="footer-text">
-                  Internova helps learners access structured training programs,
-                  track progress, complete assessments, generate certificates,
-                  and verify credentials through a premium digital learning
-                  experience.
+                  InternovaTech helps students and learners access structured online
+                  internships, track progress, complete assessments, generate verified
+                  certificates, and build practical career-focused skills through a
+                  premium digital learning experience.
                 </p>
 
                 <div className="footer-mini-badges">
                   <span className="footer-mini-badge">Verified Certificates</span>
-                  <span className="footer-mini-badge">Premium UI/UX</span>
+                  <span className="footer-mini-badge">Online Internships</span>
                   <span className="footer-mini-badge">Learning Progress</span>
                 </div>
               </div>
@@ -356,15 +356,15 @@ function Footer() {
               <div className="footer-top-card">
                 <h5 className="footer-heading">Quick Links</h5>
                 <ul className="footer-links">
-                  <li><Link to="/dashboard">Dashboard</Link></li>
-                  <li><Link to="/internships">Programs</Link></li>
-                  <li><Link to="/my-purchases">My Enrollments</Link></li>
-                  <li><Link to="/verify">Verify Certificate</Link></li>
+                  <li><Link to="/">Home</Link></li>
                   <li><Link to="/about">About Us</Link></li>
                   <li><Link to="/contact">Contact Us</Link></li>
+                  <li><Link to="/verify">Verify Certificate</Link></li>
                   <li><Link to="/privacy-policy">Privacy Policy</Link></li>
                   <li><Link to="/terms-and-conditions">Terms & Conditions</Link></li>
                   <li><Link to="/refund-policy">Refund Policy</Link></li>
+                  <li><Link to="/login">Login</Link></li>
+                  <li><Link to="/register">Register</Link></li>
                 </ul>
               </div>
             </div>
@@ -389,15 +389,15 @@ function Footer() {
                 <div className="footer-highlight-box">
                   <h6 className="footer-highlight-title">Support</h6>
                   <p className="footer-highlight-text">
-                    internova.support@gmail.com
+                    support@internovatech.com
                   </p>
                 </div>
 
                 <div className="footer-highlight-box">
                   <h6 className="footer-highlight-title">Message</h6>
                   <p className="footer-highlight-text">
-                    We help with learning access, certificate issues, payment
-                    queries, and account-related questions.
+                    We help with learning access, certificate verification,
+                    account support, and internship-related queries.
                   </p>
                 </div>
 
@@ -418,8 +418,8 @@ function Footer() {
                   Subscribe for Updates & Opportunities
                 </h4>
                 <p className="footer-subscribe-text">
-                  Get training program updates, new announcements, platform
-                  improvements, and premium learning insights delivered to your inbox.
+                  Get internship program updates, new opportunities, platform
+                  announcements, and learning insights delivered to your inbox.
                 </p>
 
                 <form className="footer-subscribe-form" onSubmit={handleSubscribe}>
@@ -442,8 +442,8 @@ function Footer() {
                 <div className="footer-highlight-box">
                   <h6 className="footer-highlight-title">Need Help Fast?</h6>
                   <p className="footer-highlight-text">
-                    Use the platform to access training programs, track modules,
-                    attempt assessments, and verify official certificates.
+                    Use InternovaTech to explore internship programs, track learning
+                    progress, attempt assessments, and verify official certificates.
                   </p>
                 </div>
 
@@ -452,18 +452,18 @@ function Footer() {
                     Secure Learning Access
                   </h6>
                   <p className="footer-highlight-text">
-                    Premium learning dashboard, certificate generation,
-                    verification support, and structured progress tracking.
+                    Premium dashboard access, certificate generation, verification
+                    support, and structured progress tracking in one place.
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="internova-footer-bottom mt-4 pt-4">
+          <div className="internovatech-footer-bottom mt-4 pt-4">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
               <p className="mb-0 footer-copy">
-                © 2026 Internova. All rights reserved.
+                © 2026 InternovaTech. All rights reserved.
               </p>
 
               <div className="footer-socials">
