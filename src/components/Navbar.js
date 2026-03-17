@@ -24,6 +24,7 @@ function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("pendingVerificationEmail");
     navigate("/");
   };
 
@@ -55,7 +56,6 @@ function Navbar() {
           -webkit-backdrop-filter: blur(18px);
           border-bottom: 1px solid rgba(226, 232, 240, 0.92);
           box-shadow: 0 10px 35px rgba(15, 23, 42, 0.06);
-          -webkit-box-shadow: 0 10px 35px rgba(15, 23, 42, 0.06);
           padding-top: 10px;
           padding-bottom: 10px;
           z-index: 1100;
@@ -77,13 +77,11 @@ function Navbar() {
           min-width: 0;
           flex-shrink: 0;
           margin-right: 6px;
-          -webkit-transition: all 0.3s ease;
           transition: all 0.3s ease;
         }
 
         .internova-brand:hover {
           transform: translateY(-1px);
-          -webkit-transform: translateY(-1px);
         }
 
         .internova-brand-wrap {
@@ -105,9 +103,6 @@ function Navbar() {
           font-weight: 800;
           font-size: 1.05rem;
           box-shadow:
-            0 14px 28px rgba(29, 78, 216, 0.22),
-            0 6px 14px rgba(11, 23, 54, 0.18);
-          -webkit-box-shadow:
             0 14px 28px rgba(29, 78, 216, 0.22),
             0 6px 14px rgba(11, 23, 54, 0.18);
           flex-shrink: 0;
@@ -143,7 +138,6 @@ function Navbar() {
           padding: 9px 11px;
           box-shadow: none !important;
           background: rgba(255,255,255,0.96);
-          -webkit-transition: all 0.25s ease;
           transition: all 0.25s ease;
           flex-shrink: 0;
           margin-left: auto;
@@ -152,12 +146,10 @@ function Navbar() {
         .internova-toggler:hover {
           background: #f8fafc;
           transform: translateY(-1px);
-          -webkit-transform: translateY(-1px);
         }
 
         .internova-toggler:focus {
           box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important;
-          -webkit-box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important;
         }
 
         .internova-toggler-icon-wrap {
@@ -199,7 +191,6 @@ function Navbar() {
           font-weight: 700;
           padding: 9px 12px !important;
           border-radius: 14px;
-          -webkit-transition: all 0.28s ease;
           transition: all 0.28s ease;
           white-space: nowrap;
           display: inline-flex !important;
@@ -212,21 +203,18 @@ function Navbar() {
           color: #0f172a !important;
           background: #f8fafc;
           transform: translateY(-1px);
-          -webkit-transform: translateY(-1px);
         }
 
         .internova-link.active {
           color: #0f172a !important;
           background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
           box-shadow: inset 0 0 0 1px #dbeafe;
-          -webkit-box-shadow: inset 0 0 0 1px #dbeafe;
         }
 
         .internova-nav-icon {
           font-size: 0.9rem;
           color: #2563eb;
           flex-shrink: 0;
-          -webkit-transition: all 0.28s ease;
           transition: all 0.28s ease;
         }
 
@@ -234,7 +222,6 @@ function Navbar() {
         .internova-link.active .internova-nav-icon {
           color: #0f172a;
           transform: scale(1.06);
-          -webkit-transform: scale(1.06);
         }
 
         .internova-right-zone {
@@ -259,7 +246,6 @@ function Navbar() {
           max-width: 280px;
           min-width: 0;
           flex-shrink: 1;
-          -webkit-transition: all 0.3s ease;
           transition: all 0.3s ease;
         }
 
@@ -267,7 +253,6 @@ function Navbar() {
           background: #ffffff;
           border-color: #60a5fa;
           box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
-          -webkit-box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
         }
 
         .internova-search {
@@ -297,10 +282,6 @@ function Navbar() {
           box-shadow:
             0 12px 25px rgba(29, 78, 216, 0.18),
             0 6px 14px rgba(11, 23, 54, 0.14);
-          -webkit-box-shadow:
-            0 12px 25px rgba(29, 78, 216, 0.18),
-            0 6px 14px rgba(11, 23, 54, 0.14);
-          -webkit-transition: all 0.28s ease;
           transition: all 0.28s ease;
           white-space: nowrap;
           flex-shrink: 0;
@@ -311,7 +292,6 @@ function Navbar() {
 
         .internova-search-btn:hover {
           transform: translateY(-1px);
-          -webkit-transform: translateY(-1px);
         }
 
         .internova-search-btn-icon {
@@ -341,15 +321,12 @@ function Navbar() {
           border: 1px solid #dbeafe;
           overflow: hidden;
           flex-shrink: 1;
-          -webkit-transition: all 0.3s ease;
           transition: all 0.3s ease;
         }
 
         .internova-user-pill:hover {
           transform: translateY(-1px);
-          -webkit-transform: translateY(-1px);
           box-shadow: 0 10px 22px rgba(37, 99, 235, 0.10);
-          -webkit-box-shadow: 0 10px 22px rgba(37, 99, 235, 0.10);
         }
 
         .internova-user-icon {
@@ -373,7 +350,6 @@ function Navbar() {
           padding: 0 16px;
           border-radius: 16px;
           font-weight: 800;
-          -webkit-transition: all 0.3s ease;
           transition: all 0.3s ease;
           white-space: nowrap;
           display: inline-flex;
@@ -390,9 +366,6 @@ function Navbar() {
           box-shadow:
             0 12px 25px rgba(29, 78, 216, 0.18),
             0 6px 14px rgba(11, 23, 54, 0.14);
-          -webkit-box-shadow:
-            0 12px 25px rgba(29, 78, 216, 0.18),
-            0 6px 14px rgba(11, 23, 54, 0.14);
         }
 
         .internova-auth-outline-btn {
@@ -400,14 +373,12 @@ function Navbar() {
           background: rgba(255,255,255,0.7);
           color: #0f172a;
           backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
         }
 
         .internova-logout-btn:hover,
         .internova-auth-btn:hover,
         .internova-auth-outline-btn:hover {
           transform: translateY(-2px);
-          -webkit-transform: translateY(-2px);
         }
 
         .internova-btn-icon {

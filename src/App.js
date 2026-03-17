@@ -8,6 +8,7 @@ import {
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyEmailOtp from "./pages/VerifyEmailOtp";
 import Dashboard from "./pages/Dashboard";
 import Internships from "./pages/Internships";
 import InternshipDetails from "./pages/InternshipDetails";
@@ -35,7 +36,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 function AppLayout() {
   const location = useLocation();
 
-  const hideLayoutRoutes = ["/", "/register"];
+  const hideLayoutRoutes = ["/", "/register", "/verify-email-otp"];
   const shouldHideLayout = hideLayoutRoutes.includes(location.pathname);
 
   return (
@@ -45,6 +46,7 @@ function AppLayout() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email-otp" element={<VerifyEmailOtp />} />
 
         <Route
           path="/dashboard"
@@ -101,13 +103,13 @@ function AppLayout() {
         />
 
         <Route
-  path="/admin/dashboard"
-  element={
-    <AdminRoute>
-      <AdminDashboard />
-    </AdminRoute>
-  }
-/>
+          path="/admin/dashboard"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
 
         <Route
           path="/certificate/:internshipId"
@@ -130,7 +132,6 @@ function AppLayout() {
           }
         />
 
-        {/* Public Policy Pages */}
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />

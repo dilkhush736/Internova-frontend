@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import API from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "../firebase";
 
 function Login() {
   const navigate = useNavigate();
@@ -12,7 +14,25 @@ function Login() {
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const saveAuthAndRedirect = (data) => {
+    localStorage.removeItem("pendingVerificationEmail");
+
+    if (data?.token) {
+      localStorage.setItem("token", data.token);
+    }
+
+    if (data?.user) {
+      localStorage.setItem("user", JSON.stringify(data.user));
+    }
+
+    setMessage("Login successful");
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 700);
+  };
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -30,17 +50,51 @@ function Login() {
 
       const { data } = await API.post("/auth/login", formData);
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      setMessage("Login successful");
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 700);
+      saveAuthAndRedirect(data);
     } catch (error) {
-      setMessage(error.response?.data?.message || "Login failed");
+      const apiMessage = error.response?.data?.message || "Login failed";
+      const requiresEmailVerification =
+        error.response?.data?.requiresEmailVerification;
+
+      if (requiresEmailVerification) {
+        const pendingEmail = error.response?.data?.email || formData.email;
+        localStorage.setItem("pendingVerificationEmail", pendingEmail);
+        setMessage(apiMessage);
+
+        setTimeout(() => {
+          navigate("/verify-email-otp", {
+            state: { email: pendingEmail },
+          });
+        }, 900);
+        return;
+      }
+
+      setMessage(apiMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setGoogleLoading(true);
+      setMessage("");
+
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+
+      const { data } = await API.post("/auth/google-login", { idToken });
+
+      saveAuthAndRedirect(data);
+    } catch (error) {
+      console.error("GOOGLE LOGIN ERROR:", error);
+      setMessage(
+        error.response?.data?.message ||
+          error.message ||
+          "Google login failed"
+      );
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -63,7 +117,6 @@ function Login() {
           filter: blur(10px);
           opacity: 0.55;
           animation: floatOrb 9s ease-in-out infinite;
-          -webkit-animation: floatOrb 9s ease-in-out infinite;
           pointer-events: none;
         }
 
@@ -82,7 +135,6 @@ function Login() {
           bottom: 60px;
           background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(59,130,246,0.22));
           animation-delay: 1.5s;
-          -webkit-animation-delay: 1.5s;
         }
 
         .login-shell {
@@ -94,24 +146,15 @@ function Login() {
           border: 1px solid rgba(255,255,255,0.45);
           background: rgba(255,255,255,0.72);
           backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
           box-shadow:
             0 24px 70px rgba(15, 23, 42, 0.14),
             0 8px 24px rgba(59, 130, 246, 0.08);
-          -webkit-box-shadow:
-            0 24px 70px rgba(15, 23, 42, 0.14),
-            0 8px 24px rgba(59, 130, 246, 0.08);
-          -webkit-transition: all 0.35s ease;
           transition: all 0.35s ease;
         }
 
         .login-main-card:hover {
           transform: translateY(-4px);
-          -webkit-transform: translateY(-4px);
           box-shadow:
-            0 30px 80px rgba(15, 23, 42, 0.18),
-            0 10px 30px rgba(59, 130, 246, 0.1);
-          -webkit-box-shadow:
             0 30px 80px rgba(15, 23, 42, 0.18),
             0 10px 30px rgba(59, 130, 246, 0.1);
         }
@@ -154,8 +197,6 @@ function Login() {
           border-radius: 999px;
           background: rgba(255,255,255,0.12);
           border: 1px solid rgba(255,255,255,0.18);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
           font-size: 0.8rem;
           font-weight: 700;
           letter-spacing: 0.08em;
@@ -172,8 +213,6 @@ function Login() {
           justify-content: center;
           background: rgba(255,255,255,0.12);
           border: 1px solid rgba(255,255,255,0.16);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
-          -webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
           font-size: 1.15rem;
           font-weight: 800;
           margin-bottom: 18px;
@@ -209,13 +248,11 @@ function Login() {
           border: 1px solid rgba(255,255,255,0.10);
           color: rgba(255,255,255,0.92);
           font-size: 0.95rem;
-          -webkit-transition: all 0.3s ease;
           transition: all 0.3s ease;
         }
 
         .login-feature-item:hover {
           transform: translateX(4px);
-          -webkit-transform: translateX(4px);
           background: rgba(255,255,255,0.12);
         }
 
@@ -225,7 +262,6 @@ function Login() {
           border-radius: 50%;
           background: #93c5fd;
           box-shadow: 0 0 0 5px rgba(147,197,253,0.15);
-          -webkit-box-shadow: 0 0 0 5px rgba(147,197,253,0.15);
           flex-shrink: 0;
         }
 
@@ -276,8 +312,6 @@ function Login() {
           padding: 14px 16px;
           font-weight: 600;
           margin-bottom: 22px;
-          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-          -webkit-box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
         }
 
         .login-alert-success {
@@ -311,9 +345,6 @@ function Login() {
           padding: 14px 18px;
           color: #0f172a;
           font-size: 1rem;
-          box-shadow: inset 0 1px 2px rgba(15,23,42,0.03);
-          -webkit-box-shadow: inset 0 1px 2px rgba(15,23,42,0.03);
-          -webkit-transition: all 0.3s ease;
           transition: all 0.3s ease;
         }
 
@@ -323,11 +354,7 @@ function Login() {
           box-shadow:
             0 0 0 4px rgba(37,99,235,0.12),
             0 12px 28px rgba(37,99,235,0.08);
-          -webkit-box-shadow:
-            0 0 0 4px rgba(37,99,235,0.12),
-            0 12px 28px rgba(37,99,235,0.08);
           transform: translateY(-1px);
-          -webkit-transform: translateY(-1px);
         }
 
         .login-input::placeholder {
@@ -339,7 +366,6 @@ function Login() {
           top: 50%;
           right: 14px;
           transform: translateY(-50%);
-          -webkit-transform: translateY(-50%);
           border: none;
           background: transparent;
           color: #475569;
@@ -347,7 +373,6 @@ function Login() {
           font-size: 0.9rem;
           padding: 8px 10px;
           border-radius: 12px;
-          -webkit-transition: all 0.25s ease;
           transition: all 0.25s ease;
         }
 
@@ -366,7 +391,6 @@ function Login() {
           color: #2563eb;
           text-decoration: none;
           font-weight: 700;
-          -webkit-transition: all 0.25s ease;
           transition: all 0.25s ease;
         }
 
@@ -374,40 +398,40 @@ function Login() {
           color: #1d4ed8;
           text-decoration: none;
           transform: translateY(-1px);
-          -webkit-transform: translateY(-1px);
         }
 
-        .login-submit-btn {
+        .login-submit-btn,
+        .login-google-btn {
           min-height: 60px;
-          border: none;
           border-radius: 18px;
           font-weight: 800;
           font-size: 1rem;
           letter-spacing: 0.01em;
+          transition: all 0.32s ease;
+        }
+
+        .login-submit-btn {
+          border: none;
           color: #fff;
           background: linear-gradient(135deg, #0b1736 0%, #142850 40%, #1d4ed8 100%);
           box-shadow:
             0 18px 35px rgba(29, 78, 216, 0.22),
             0 8px 20px rgba(11, 23, 54, 0.18);
-          -webkit-box-shadow:
-            0 18px 35px rgba(29, 78, 216, 0.22),
-            0 8px 20px rgba(11, 23, 54, 0.18);
-          -webkit-transition: all 0.32s ease;
-          transition: all 0.32s ease;
         }
 
-        .login-submit-btn:hover:not(:disabled) {
+        .login-google-btn {
+          border: 1px solid #dbe3f0;
+          background: #ffffff;
+          color: #0f172a;
+        }
+
+        .login-submit-btn:hover:not(:disabled),
+        .login-google-btn:hover:not(:disabled) {
           transform: translateY(-2px) scale(1.01);
-          -webkit-transform: translateY(-2px) scale(1.01);
-          box-shadow:
-            0 24px 45px rgba(29, 78, 216, 0.28),
-            0 10px 24px rgba(11, 23, 54, 0.22);
-          -webkit-box-shadow:
-            0 24px 45px rgba(29, 78, 216, 0.28),
-            0 10px 24px rgba(11, 23, 54, 0.22);
         }
 
-        .login-submit-btn:disabled {
+        .login-submit-btn:disabled,
+        .login-google-btn:disabled {
           opacity: 0.8;
           cursor: not-allowed;
         }
@@ -419,33 +443,15 @@ function Login() {
           margin-bottom: 0;
         }
 
-        .login-footer-text strong,
-        .login-footer-text a {
-          color: #0f172a;
-        }
-
         .login-divider {
           height: 1px;
           background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
-          margin: 22px 0 8px;
+          margin: 22px 0 16px;
         }
 
         @keyframes floatOrb {
-          0%, 100% {
-            transform: translateY(0px) translateX(0px);
-          }
-          50% {
-            transform: translateY(-18px) translateX(10px);
-          }
-        }
-
-        @-webkit-keyframes floatOrb {
-          0%, 100% {
-            -webkit-transform: translateY(0px) translateX(0px);
-          }
-          50% {
-            -webkit-transform: translateY(-18px) translateX(10px);
-          }
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-18px) translateX(10px); }
         }
 
         @media (max-width: 991px) {
@@ -594,8 +600,8 @@ function Login() {
                           </div>
 
                           <div className="login-action-row">
-                            <Link to="/forgot-password" className="login-link">
-                              Forgot Password?
+                            <Link to="/verify-email-otp" className="login-link">
+                              Verify Email OTP
                             </Link>
                           </div>
 
@@ -609,6 +615,17 @@ function Login() {
                         </form>
 
                         <div className="login-divider"></div>
+
+                        <button
+                          type="button"
+                          className="btn login-google-btn w-100"
+                          onClick={handleGoogleLogin}
+                          disabled={googleLoading}
+                        >
+                          {googleLoading
+                            ? "Continuing with Google..."
+                            : "Continue with Google"}
+                        </button>
 
                         <p className="login-footer-text">
                           Don’t have an account?{" "}
