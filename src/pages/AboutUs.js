@@ -172,6 +172,7 @@ function AboutUs() {
                   </p>
                 </div>
               </div>
+              
 
               <div className="col-md-6">
                 <div className="policy-info-card">
