@@ -44,6 +44,12 @@ function CourseProgress() {
   const [loading, setLoading] = useState(true);
   const [unlockingAll, setUnlockingAll] = useState(false);
   const [error, setError] = useState("");
+  const [toast, setToast] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
 
   const user = useMemo(() => {
     try {
@@ -52,6 +58,24 @@ function CourseProgress() {
       return null;
     }
   }, []);
+
+  const showToast = (type, title, message) => {
+    setToast({
+      show: true,
+      type,
+      title,
+      message,
+    });
+
+    setTimeout(() => {
+      setToast({
+        show: false,
+        type: "success",
+        title: "",
+        message: "",
+      });
+    }, 3200);
+  };
 
   const loadCourseData = async () => {
     try {
@@ -308,6 +332,13 @@ function CourseProgress() {
 
   const handleOpenMiniTest = () => {
     if (derivedData?.overallProgress < (course?.miniTestUnlockProgress || 80)) {
+      showToast(
+        "error",
+        "Mini Test Locked",
+        `Complete at least ${
+          course?.miniTestUnlockProgress || 80
+        }% progress to open the mini test.`
+      );
       return;
     }
     navigate(`/quiz/${internshipId}`);
@@ -321,7 +352,11 @@ function CourseProgress() {
     if (!internshipId || !course || course.unlockAllPurchased) return;
 
     if (!window.Razorpay) {
-      alert("Razorpay SDK not loaded. Please refresh and try again.");
+      showToast(
+        "error",
+        "Payment Unavailable",
+        "Razorpay SDK not loaded. Please refresh the page and try again."
+      );
       return;
     }
 
@@ -359,7 +394,7 @@ function CourseProgress() {
           },
           modal: {
             ondismiss: function () {
-              reject(new Error("Payment cancelled"));
+              reject(new Error("Payment cancelled by user"));
             },
           },
           prefill: {
@@ -375,10 +410,21 @@ function CourseProgress() {
       });
 
       await loadCourseData();
+
+      showToast(
+        "success",
+        "Premium Access Activated",
+        "All locked modules are now unlocked successfully for this internship."
+      );
     } catch (err) {
       console.error("Unlock all modules failed:", err);
-      if (err?.message && err.message !== "Payment cancelled") {
-        alert(err.message);
+
+      if (err?.message && err.message !== "Payment cancelled by user") {
+        showToast(
+          "error",
+          "Unlock Failed",
+          err.message || "Unable to complete unlock-all payment."
+        );
       }
     } finally {
       setUnlockingAll(false);
@@ -433,7 +479,77 @@ function CourseProgress() {
   }
 
   return (
-    <div className="course-progress-shell">
+    <div className="course-progress-shell position-relative">
+      <style>{`
+        .course-page-toast {
+          position: fixed;
+          top: 92px;
+          right: 24px;
+          z-index: 99999;
+          min-width: 280px;
+          max-width: 390px;
+        }
+
+        .course-page-toast-box {
+          border-radius: 20px;
+          padding: 16px 18px;
+          box-shadow: 0 22px 46px rgba(15, 23, 42, 0.16);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+        }
+
+        .course-page-toast-box.success {
+          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+          border: 1px solid #86efac;
+        }
+
+        .course-page-toast-box.error {
+          background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+          border: 1px solid #fca5a5;
+        }
+
+        .course-page-toast-title {
+          font-size: 0.96rem;
+          font-weight: 900;
+          margin-bottom: 4px;
+        }
+
+        .course-page-toast-title.success {
+          color: #065f46;
+        }
+
+        .course-page-toast-title.error {
+          color: #b91c1c;
+        }
+
+        .course-page-toast-message {
+          color: #1f2937;
+          font-size: 0.92rem;
+          line-height: 1.6;
+        }
+
+        @media (max-width: 767px) {
+          .course-page-toast {
+            left: 14px;
+            right: 14px;
+            top: 86px;
+            min-width: auto;
+            max-width: none;
+          }
+        }
+      `}</style>
+
+      {toast.show && (
+        <div className="course-page-toast">
+          <div className={`course-page-toast-box ${toast.type}`}>
+            <div className={`course-page-toast-title ${toast.type}`}>
+              {toast.title}
+            </div>
+            <div className="course-page-toast-message">{toast.message}</div>
+          </div>
+        </div>
+      )}
+
       <div className="course-bg-orb orb-one" />
       <div className="course-bg-orb orb-two" />
       <div className="course-bg-orb orb-three" />
