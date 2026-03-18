@@ -1,11 +1,7 @@
 import API from "./api";
 
 const getErrorMessage = (error, fallbackMessage) => {
-  return (
-    error?.response?.data?.message ||
-    error?.message ||
-    fallbackMessage
-  );
+  return error?.response?.data?.message || error?.message || fallbackMessage;
 };
 
 const validateInternshipId = (internshipId) => {
@@ -21,9 +17,7 @@ export const getCourseProgress = async (internshipId) => {
     const { data } = await API.get(`/progress/course/${internshipId}`);
     return data;
   } catch (error) {
-    throw new Error(
-      getErrorMessage(error, "Failed to fetch course progress")
-    );
+    throw new Error(getErrorMessage(error, "Failed to fetch course progress"));
   }
 };
 
@@ -44,9 +38,7 @@ export const updateVideoProgress = async (internshipId, payload = {}) => {
 
     return data;
   } catch (error) {
-    throw new Error(
-      getErrorMessage(error, "Failed to update video progress")
-    );
+    throw new Error(getErrorMessage(error, "Failed to update video progress"));
   }
 };
 
@@ -60,8 +52,39 @@ export const unlockAllModules = async (internshipId) => {
 
     return data;
   } catch (error) {
+    throw new Error(getErrorMessage(error, "Failed to unlock all modules"));
+  }
+};
+
+export const createUnlockAllOrder = async (internshipId) => {
+  try {
+    validateInternshipId(internshipId);
+
+    const { data } = await API.post("/payments/create-order", {
+      internshipId,
+      purchaseType: "unlock_all",
+    });
+
+    return data;
+  } catch (error) {
     throw new Error(
-      getErrorMessage(error, "Failed to unlock all modules")
+      getErrorMessage(error, "Failed to create unlock-all payment order")
+    );
+  }
+};
+
+export const verifyUnlockAllPayment = async (payload = {}) => {
+  try {
+    const { data } = await API.post("/payments/verify", {
+      razorpay_order_id: payload?.razorpay_order_id || "",
+      razorpay_payment_id: payload?.razorpay_payment_id || "",
+      razorpay_signature: payload?.razorpay_signature || "",
+    });
+
+    return data;
+  } catch (error) {
+    throw new Error(
+      getErrorMessage(error, "Failed to verify unlock-all payment")
     );
   }
 };

@@ -15,7 +15,8 @@ import ContinueLearningCard from "../components/ContinueLearningCard";
 import {
   getCourseProgress,
   updateVideoProgress,
-  unlockAllModules,
+  createUnlockAllOrder,
+  verifyUnlockAllPayment,
 } from "../services/courseService";
 
 import {
@@ -41,7 +42,16 @@ function CourseProgress() {
   const [selectedModule, setSelectedModule] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [unlockingAll, setUnlockingAll] = useState(false);
   const [error, setError] = useState("");
+
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch (error) {
+      return null;
+    }
+  }, []);
 
   const loadCourseData = async () => {
     try {
@@ -308,21 +318,70 @@ function CourseProgress() {
   };
 
   const handleUnlockAllModules = async () => {
-    if (!internshipId) return;
+    if (!internshipId || !course || course.unlockAllPurchased) return;
+
+    if (!window.Razorpay) {
+      alert("Razorpay SDK not loaded. Please refresh and try again.");
+      return;
+    }
 
     try {
-      const response = await unlockAllModules(internshipId);
+      setUnlockingAll(true);
 
-      if (!response?.success) {
-        throw new Error(response?.message || "Failed to unlock all modules");
-      }
+      const orderData = await createUnlockAllOrder(internshipId);
 
-      setCourse((prev) => ({
-        ...prev,
-        unlockAllPurchased: true,
-      }));
+      await new Promise((resolve, reject) => {
+        const rzp = new window.Razorpay({
+          key: orderData.key,
+          amount: orderData.order.amount,
+          currency: orderData.order.currency,
+          name: "Internova",
+          description: `Unlock all modules - ${course.title}`,
+          order_id: orderData.order.id,
+          handler: async function (response) {
+            try {
+              const verifyRes = await verifyUnlockAllPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              });
+
+              if (!verifyRes?.success) {
+                throw new Error(
+                  verifyRes?.message || "Unlock-all payment verification failed"
+                );
+              }
+
+              resolve(verifyRes);
+            } catch (error) {
+              reject(error);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              reject(new Error("Payment cancelled"));
+            },
+          },
+          prefill: {
+            name: user?.name || "",
+            email: user?.email || "",
+          },
+          theme: {
+            color: "#1d4ed8",
+          },
+        });
+
+        rzp.open();
+      });
+
+      await loadCourseData();
     } catch (err) {
       console.error("Unlock all modules failed:", err);
+      if (err?.message && err.message !== "Payment cancelled") {
+        alert(err.message);
+      }
+    } finally {
+      setUnlockingAll(false);
     }
   };
 
@@ -447,6 +506,8 @@ function CourseProgress() {
             lockedModules={derivedData.lockedModules}
             unlockAllPurchased={course.unlockAllPurchased}
             onUnlockAllModules={handleUnlockAllModules}
+            loading={unlockingAll}
+            price={course.unlockAllPrice || 99}
           />
         </div>
 

@@ -4,6 +4,8 @@ function UnlockAllModulesCard({
   lockedModules,
   unlockAllPurchased,
   onUnlockAllModules,
+  loading = false,
+  price = 99,
 }) {
   if (unlockAllPurchased) {
     return (
@@ -18,8 +20,9 @@ function UnlockAllModulesCard({
         </div>
 
         <p className="course-action-text">
-          You already have unlock-all access. You can watch all modules now.
-          Certificate duration rules still apply.
+          Premium unlock-all access is active for this internship. You can now
+          continue through all course modules without waiting for scheduled day
+          locks. Certificate duration rules still apply.
         </p>
 
         <button type="button" className="course-action-btn disabled" disabled>
@@ -34,27 +37,32 @@ function UnlockAllModulesCard({
       <div className="course-action-top">
         <div>
           <p className="course-action-label">Unlock All Modules</p>
-          <h3>Instant Access for ₹99</h3>
+          <h3>Instant Access for ₹{price}</h3>
         </div>
 
-        <span className="course-action-badge info">Optional</span>
+        <span className="course-action-badge info">Addon</span>
       </div>
 
       <p className="course-action-text">
-        Get immediate access to all locked modules. This only unlocks learning
-        content early. Certificate eligibility will still depend on required
-        progress, mini test, and internship duration completion.
+        Get verified premium access to all currently locked modules through a
+        real payment flow. This unlocks learning content early, but certificate
+        eligibility will still depend on required progress, mini test, and
+        internship duration completion.
       </p>
 
       <button
         type="button"
         className={`course-action-btn ${
-          lockedModules > 0 ? "primary" : "disabled"
+          lockedModules > 0 && !loading ? "primary" : "disabled"
         }`}
-        disabled={lockedModules === 0}
-        onClick={lockedModules > 0 ? onUnlockAllModules : undefined}
+        disabled={lockedModules === 0 || loading}
+        onClick={lockedModules > 0 && !loading ? onUnlockAllModules : undefined}
       >
-        {lockedModules > 0 ? "Unlock All for ₹99" : "No Locked Modules"}
+        {loading
+          ? "Opening Payment..."
+          : lockedModules > 0
+          ? `Unlock All for ₹${price}`
+          : "No Locked Modules"}
       </button>
     </div>
   );
