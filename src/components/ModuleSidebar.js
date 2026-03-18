@@ -45,7 +45,10 @@ function ModuleSidebar({
       <div className="course-sidebar-top">
         <p className="section-kicker">Structured Learning Path</p>
         <h3>Course Modules</h3>
-        <p>Choose a module and continue topic-wise video learning.</p>
+        <p>
+          Follow your internship roadmap module by module and continue learning
+          with clear progress visibility.
+        </p>
       </div>
 
       <div className="pro-module-stack">
@@ -95,7 +98,8 @@ function ModuleSidebar({
 
                     {!module.isUnlocked && (
                       <small className="pro-module-lock-note">
-                        Access available after scheduled day unlock
+                        Locked until internship day {module.unlockDay} or premium
+                        unlock activation.
                       </small>
                     )}
                   </div>
@@ -175,7 +179,7 @@ function ModuleSidebar({
                       })}
                     </div>
                   ) : (
-                    <div className="pro-locked-box">
+                    <div className="pro-locked-box premium-locked-box">
                       <div className="pro-locked-icon">
                         <FaLock />
                       </div>
@@ -183,9 +187,9 @@ function ModuleSidebar({
                       <div>
                         <strong>This module is currently locked.</strong>
                         <p>
-                          It will unlock on internship day {module.unlockDay}. You
-                          can also unlock all remaining modules through premium
-                          access.
+                          It becomes available on internship day {module.unlockDay}.
+                          You can also unlock all remaining modules early through
+                          verified premium access.
                         </p>
                       </div>
                     </div>

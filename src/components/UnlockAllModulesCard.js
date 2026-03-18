@@ -9,7 +9,7 @@ function UnlockAllModulesCard({
 }) {
   if (unlockAllPurchased) {
     return (
-      <div className="course-action-card premium-card">
+      <div className="course-action-card premium-card premium-card-active">
         <div className="course-action-top">
           <div>
             <p className="course-action-label">Premium Access</p>
@@ -20,10 +20,16 @@ function UnlockAllModulesCard({
         </div>
 
         <p className="course-action-text">
-          Premium unlock-all access is active for this internship. You can now
-          continue through all course modules without waiting for scheduled day
-          locks. Certificate duration rules still apply.
+          Your premium access is active. All scheduled locked modules are now
+          available for learning. Certificate rules, progress requirement, mini
+          test, and duration completion will still apply.
         </p>
+
+        <div className="premium-benefit-list">
+          <span>Full module access</span>
+          <span>Continue without waiting</span>
+          <span>Premium unlock verified</span>
+        </div>
 
         <button type="button" className="course-action-btn disabled" disabled>
           Premium Active
@@ -33,22 +39,27 @@ function UnlockAllModulesCard({
   }
 
   return (
-    <div className="course-action-card premium-card">
+    <div className="course-action-card premium-card premium-card-upgrade">
       <div className="course-action-top">
         <div>
-          <p className="course-action-label">Unlock All Modules</p>
-          <h3>Instant Access for ₹{price}</h3>
+          <p className="course-action-label">Premium Upgrade</p>
+          <h3>Unlock All Modules for ₹{price}</h3>
         </div>
 
-        <span className="course-action-badge info">Addon</span>
+        <span className="course-action-badge info">Secure Payment</span>
       </div>
 
       <p className="course-action-text">
-        Get verified premium access to all currently locked modules through a
-        real payment flow. This unlocks learning content early, but certificate
-        eligibility will still depend on required progress, mini test, and
-        internship duration completion.
+        Unlock all currently locked modules instantly through a verified payment.
+        This is ideal for learners who want faster access without waiting for
+        day-based release.
       </p>
+
+      <div className="premium-benefit-list">
+        <span>{lockedModules} modules still locked</span>
+        <span>One-time addon payment</span>
+        <span>Certificate rules unchanged</span>
+      </div>
 
       <button
         type="button"
