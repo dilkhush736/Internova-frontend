@@ -248,6 +248,8 @@ function InternshipDetails() {
         description: `InternovaTech - ${data?.internship?.title || internship?.title || "Program"} (${data?.duration?.label || selectedPlan.label})`,
         order_id: data.order.id,
         handler: async function (response) {
+          console.log("RAZORPAY SUCCESS RESPONSE:", response);
+          console.log("VERIFY API CALL STARTING...");
           try {
             const verifyRes = await API.post("/payments/verify", {
               razorpay_order_id: response.razorpay_order_id,
@@ -319,6 +321,7 @@ function InternshipDetails() {
       const rzp = new window.Razorpay(options);
 
       rzp.on("payment.failed", function (response) {
+        console.log("RAZORPAY PAYMENT FAILED EVENT:", response);
         console.error("Razorpay payment failed:", response);
         showToast(
           "error",
