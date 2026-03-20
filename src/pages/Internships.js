@@ -5,7 +5,7 @@ import { Link, useSearchParams } from "react-router-dom";
 const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "https://api.internovatech.in/api";
 
-const BRAND_LOGO_URL = `${API_BASE_URL.replace(/\/api\/?$/, "")}/uploads/branding/logo.png`;
+const BRAND_LOGO_URL = `${API_BASE_URL.replace(/\/api\/?$/, "")}/uploads/branding/brand logo.png`;
 
 function Internships() {
   const [internships, setInternships] = useState([]);
