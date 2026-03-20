@@ -360,7 +360,7 @@ function Dashboard() {
                   </h1>
                   <p className="dashboard-hero-subtitle">
                     Track your learning progress, manage course access, download
-                    offer letters, complete mini tests, and generate verified
+                    learning access letters, complete mini tests, and generate verified
                     certificates from one elegant dashboard.
                   </p>
                 </div>

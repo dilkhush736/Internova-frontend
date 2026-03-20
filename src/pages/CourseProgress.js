@@ -414,7 +414,7 @@ function CourseProgress() {
       showToast(
         "success",
         "Premium Access Activated",
-        "All locked modules are now unlocked successfully for this internship."
+        "All locked modules are now unlocked successfully for this Training Programs."
       );
     } catch (err) {
       console.error("Unlock all modules failed:", err);
@@ -443,7 +443,7 @@ function CourseProgress() {
             <div className="state-shimmer state-shimmer-lg" />
             <div className="state-shimmer state-shimmer-md" />
             <div className="state-shimmer state-shimmer-sm" />
-            <p>Loading your internship learning dashboard...</p>
+            <p>Loading your Training Programs learning dashboard...</p>
           </div>
         </div>
       </div>

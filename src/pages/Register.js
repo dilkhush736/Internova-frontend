@@ -654,7 +654,7 @@ function Register() {
                           <h2 className="register-heading">Get started now</h2>
                           <p className="register-subheading">
                             Fill in your details to create your Internova account
-                            and access all internship tools in one place.
+                            and access all Training Programs tools in one place.
                           </p>
                         </div>
 

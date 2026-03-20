@@ -111,8 +111,8 @@ function InternshipDetails() {
         );
       }
     } catch (error) {
-      console.error("Failed to fetch internship details:", error);
-      showToast("error", "Failed to load internship details");
+      console.error("Failed to fetch Training Programs details:", error);
+      showToast("error", "Failed to load Training Programs details");
     } finally {
       setPageLoading(false);
     }
@@ -169,13 +169,13 @@ function InternshipDetails() {
   };
 
   useEffect(() => {
-    document.title = "Internship Program Details | InternovaTech";
+    document.title = "Training Programs Details | InternovaTech";
     fetchInternship();
     checkCertificateEligibility();
 
     return () => {
       document.title =
-        "InternovaTech - Online Internships, Certificates and Tech Training";
+        "InternovaTech - Online Training Programs, Certificates and Tech Training";
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -1111,7 +1111,7 @@ function InternshipDetails() {
                   ) : certificateEligible ? (
                     <div className="details-v61-status details-v61-status-success">
                       {eligibilityMessage ||
-                        "You are eligible to claim your certificate for this internship program."}
+                        "You are eligible to claim your certificate for this Training Programs."}
                     </div>
                   ) : (
                     <div className="details-v61-status details-v61-status-warning">
@@ -1171,7 +1171,7 @@ function InternshipDetails() {
                       <p className="details-v61-footer-text">
                         InternovaTech combines guided learning, progress
                         visibility, assessments, and trusted certificate support
-                        inside one polished internship experience.
+                        inside one polished Training Programs experience.
                       </p>
                     </div>
                   </div>

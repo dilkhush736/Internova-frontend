@@ -44,7 +44,7 @@ function CourseProgressCard({
 
         <p className="course-overall-note">
           Keep learning regularly. Certificate unlock needs required progress,
-          mini test pass, and internship duration completion.
+          mini test pass, and Training Programs duration completion.
         </p>
       </div>
 

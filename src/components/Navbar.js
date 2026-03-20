@@ -1057,7 +1057,7 @@ function Navbar() {
                   <div className="internovatech-brand-text">
                     <span className="brand-main">InternovaTech</span>
                     <span className="brand-sub d-block">
-                      Online Internships Platform
+                      Online Training Platform
                     </span>
                   </div>
                 </div>

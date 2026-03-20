@@ -561,7 +561,7 @@ function Footer() {
                   Build skills, track progress, and validate achievement with InternovaTech
                 </h2>
                 <p className="footer-v60-topbar-text">
-                  Explore premium online internship programs, complete guided learning,
+                  Explore premium online Training Programs, complete guided learning,
                   monitor progress, and access trusted certificate verification inside one
                   polished digital platform.
                 </p>
@@ -588,20 +588,20 @@ function Footer() {
                   <div>
                     <h4 className="footer-v60-brand-title mb-0">InternovaTech</h4>
                     <small className="footer-v60-brand-sub">
-                      Online Internships & Certificate Platform
+                      Online Training Programs & Certificate Platform
                     </small>
                   </div>
                 </div>
 
                 <p className="footer-v60-text">
                   InternovaTech helps students and learners access structured online
-                  internships, practical modules, progress tracking, mini assessments,
+                  Training Programs, practical modules, progress tracking, mini assessments,
                   and verified certificates through a premium SaaS-style learning experience.
                 </p>
 
                 <div className="footer-v60-mini-badges">
                   <span className="footer-v60-mini-badge">Verified Certificates</span>
-                  <span className="footer-v60-mini-badge">Online Internships</span>
+                  <span className="footer-v60-mini-badge">Online Training Programs</span>
                   <span className="footer-v60-mini-badge">Premium Dashboard</span>
                   <span className="footer-v60-mini-badge">Practical Learning</span>
                 </div>
@@ -649,7 +649,7 @@ function Footer() {
                 <div className="footer-v60-info-box">
                   <h6 className="footer-v60-info-title">Message</h6>
                   <p className="footer-v60-info-text">
-                    We help with internship access, verification support, account help,
+                    We help with Training Programs access, verification support, account help,
                     and learning-related questions.
                   </p>
                 </div>
