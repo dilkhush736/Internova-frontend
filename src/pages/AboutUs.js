@@ -1968,7 +1968,7 @@ function AboutUs() {
                 <p className="home-v67-process-text">
                   InternovaTech combines premium SaaS design with structured
                   learning flow, helping students and freshers go from exploration
-                  to completion inside one trusted Internship Programs ecosystem.
+                  to completion inside one trusted Training Programs ecosystem.
                 </p>
 
                 <div className="home-v67-timeline">
