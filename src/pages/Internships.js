@@ -40,8 +40,8 @@ function Internships() {
       const { data } = await API.get("/internships");
       setInternships(data.internships || []);
     } catch (error) {
-      console.error("Failed to fetch internship programs:", error);
-      showToast("error", "Failed to fetch internship programs");
+      console.error("Failed to fetch Training Program:", error);
+      showToast("error", "Failed to fetch Training Program");
     } finally {
       setLoading(false);
     }
@@ -885,7 +885,7 @@ if (loading) {
                 </h1>
 
                 <p className="programs-v61-text">
-                  Discover premium internship programs across modern domains with
+                  Discover premium Training Program across modern domains with
                   guided learning, structured progression, assessments, and
                   verified certificate support. InternovaTech helps you move
                   from exploration to validated digital achievement in one clean
@@ -1029,7 +1029,7 @@ if (loading) {
                           item.thumbnail ||
                           "https://via.placeholder.com/400x250"
                         }
-                        alt={item.title || "InternovaTech internship program"}
+                        alt={item.title || "InternovaTech Training Program"}
                         className="programs-v61-image"
                       />
                     </div>
@@ -1084,7 +1084,9 @@ if (loading) {
               <div className="programs-v61-empty">
                 <h3 className="programs-v61-empty-title">No Programs Found</h3>
                 <p className="programs-v61-empty-text">
-                  No internship programs matched your current search or filters.
+                  No  matched your current search or filters.
+                  No  matched your current search or filters.
+                  No matched your current search or filters.
                   Try adjusting the query or clearing all filters to discover
                   more options.
                 </p>

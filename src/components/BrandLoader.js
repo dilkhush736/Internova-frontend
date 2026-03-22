@@ -10,7 +10,7 @@ const BRAND_LOGO_URL = `${API_BASE_URL.replace(
 
 const STATUS_TEXTS = [
   "Preparing your InternovaTech experience",
-  "Loading premium internship programs",
+  "Loading premium Training Program",
   "Syncing categories and learning paths",
   "Optimizing your browsing experience",
 ];

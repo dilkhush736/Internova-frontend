@@ -78,7 +78,7 @@ function InternshipDetails() {
       setInternship(internshipData);
 
       if (internshipData?.title) {
-        document.title = `${internshipData.title} | InternovaTech Internship Program`;
+        document.title = `${internshipData.title} | InternovaTech Training Program`;
 
         const metaDescription = document.querySelector('meta[name="description"]');
         if (metaDescription) {
@@ -86,7 +86,7 @@ function InternshipDetails() {
             internshipData.description?.length > 155
               ? `${internshipData.description.slice(0, 152)}...`
               : internshipData.description ||
-                `Explore the ${internshipData.title} internship program on InternovaTech with practical learning, assessments, and verified certificate support.`;
+                `Explore the ${internshipData.title} Training Program on InternovaTech with practical learning, assessments, and verified certificate support.`;
 
           metaDescription.setAttribute("content", shortDescription);
         }
@@ -112,8 +112,8 @@ function InternshipDetails() {
         );
       }
     } catch (error) {
-      console.error("Failed to fetch Internship Programs details:", error);
-      showToast("error", "Failed to load Internship Programs details");
+      console.error("Failed to fetch Training Program details:", error);
+      showToast("error", "Failed to load Training Program details");
     } finally {
       setPageLoading(false);
     }
@@ -170,13 +170,13 @@ function InternshipDetails() {
   };
 
   useEffect(() => {
-    document.title = "Internship Programs Details | InternovaTech";
+    document.title = "Training Program Details | InternovaTech";
     fetchInternship();
     checkCertificateEligibility();
 
     return () => {
       document.title =
-        "InternovaTech - Online Internship Programs, Certificates and Tech Training";
+        "InternovaTech - Online Training Program, Certificates and Tech Training";
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -413,7 +413,7 @@ function InternshipDetails() {
         }}
       >
         <div className="text-center px-3">
-          <div className="fw-bold text-dark mb-2">Internship program not found</div>
+          <div className="fw-bold text-dark mb-2">Training Program not found</div>
           <div className="text-muted mb-3">Please go back and try again.</div>
           <Link to="/internships" className="btn btn-dark rounded-pill px-4">
             Back to Programs
@@ -1028,7 +1028,7 @@ function InternshipDetails() {
                       internship.thumbnail ||
                       "https://via.placeholder.com/600x350"
                     }
-                    alt={internship.title || "InternovaTech internship program"}
+                    alt={internship.title || "InternovaTech Training Program"}
                     className="details-v61-image"
                   />
                 </div>
@@ -1112,7 +1112,7 @@ function InternshipDetails() {
                   ) : certificateEligible ? (
                     <div className="details-v61-status details-v61-status-success">
                       {eligibilityMessage ||
-                        "You are eligible to claim your certificate for this Internship Programs."}
+                        "You are eligible to claim your certificate for this Training Program."}
                     </div>
                   ) : (
                     <div className="details-v61-status details-v61-status-warning">
@@ -1172,7 +1172,7 @@ function InternshipDetails() {
                       <p className="details-v61-footer-text">
                         InternovaTech combines guided learning, progress
                         visibility, assessments, and trusted certificate support
-                        inside one polished Internship Programs experience.
+                        inside one polished Training Program experience.
                       </p>
                     </div>
                   </div>

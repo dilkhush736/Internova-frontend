@@ -1436,7 +1436,7 @@ function AdminInternships() {
                   <h1 className="admin-hero-title">Admin Internship Manager</h1>
                   <p className="admin-hero-text">
                     Create, edit, preview, duplicate, import, export, search, toggle,
-                    and manage internship programs from one premium admin workspace.
+                    and manage Training Program from one premium admin workspace.
                   </p>
                 </div>
 

@@ -541,7 +541,7 @@ function CertificatePage() {
               <h1 className="certificate-hero-title">Certificate Dashboard</h1>
               <p className="certificate-hero-text">
                 Review your eligibility status and generate or download your
-                Internship Programs completion certificate once all conditions are met.
+                Training Program completion certificate once all conditions are met.
               </p>
             </div>
           </div>

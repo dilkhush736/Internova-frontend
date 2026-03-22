@@ -415,7 +415,7 @@ function CourseProgress() {
       showToast(
         "success",
         "Premium Access Activated",
-        "All locked modules are now unlocked successfully for this Internship Programs."
+        "All locked modules are now unlocked successfully for this Training Program."
       );
     } catch (err) {
       console.error("Unlock all modules failed:", err);
