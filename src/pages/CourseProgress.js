@@ -446,7 +446,7 @@ function CourseProgress() {
   };
 
   if (loading) {
-    return <BrandLoader title="Loading programs" />;
+    return <BrandLoader title="Loading internships" />;
   }
 
   if (error || !course || !derivedData) {

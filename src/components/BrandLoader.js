@@ -16,7 +16,7 @@ const STATUS_TEXTS = [
 ];
 
 function BrandLoader({
-  title = "Loading programs",
+  title = "Loading internships",
   subtitle,
   fullScreen = true,
   minHeight = "100vh",

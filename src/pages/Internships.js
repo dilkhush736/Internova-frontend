@@ -178,7 +178,7 @@ function Internships() {
   ].filter(Boolean).length;
 
 if (loading) {
-  return <BrandLoader title="Loading programs" />;
+  return <BrandLoader title="Loading internships" />;
 }
 
   return (

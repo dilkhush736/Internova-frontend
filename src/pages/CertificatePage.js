@@ -171,7 +171,7 @@ function CertificatePage() {
   const durationCompleted = !!eligibility?.durationCompleted;
 
   if (loading) {
-    return <BrandLoader title="Loading programs" />;
+    return <BrandLoader title="Loading internships" />;
   }
 
   return (
