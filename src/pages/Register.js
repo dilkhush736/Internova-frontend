@@ -621,7 +621,7 @@ function Register() {
 
                     <h1 className="register-brand-title">Create Your Account</h1>
                     <p className="register-brand-subtitle">
-                      Register to explore Training Programs, complete learning
+                      Register to explore Internship Programs, complete learning
                       modules, attempt mini tests, and earn premium verified
                       certificates with a seamless professional experience.
                     </p>
@@ -654,7 +654,7 @@ function Register() {
                           <h2 className="register-heading">Get started now</h2>
                           <p className="register-subheading">
                             Fill in your details to create your Internova account
-                            and access all Training Programs tools in one place.
+                            and access all Internship Programs tools in one place.
                           </p>
                         </div>
 

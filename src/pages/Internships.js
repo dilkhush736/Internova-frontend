@@ -40,8 +40,8 @@ function Internships() {
       const { data } = await API.get("/internships");
       setInternships(data.internships || []);
     } catch (error) {
-      console.error("Failed to fetch Training Program:", error);
-      showToast("error", "Failed to fetch Training Program");
+      console.error("Failed to fetch Internship Programs:", error);
+      showToast("error", "Failed to fetch Internship Programs");
     } finally {
       setLoading(false);
     }
@@ -885,7 +885,7 @@ if (loading) {
                 </h1>
 
                 <p className="programs-v61-text">
-                  Discover premium Training Program across modern domains with
+                  Discover premium Internship Programs across modern domains with
                   guided learning, structured progression, assessments, and
                   verified certificate support. InternovaTech helps you move
                   from exploration to validated digital achievement in one clean
@@ -1029,7 +1029,7 @@ if (loading) {
                           item.thumbnail ||
                           "https://via.placeholder.com/400x250"
                         }
-                        alt={item.title || "InternovaTech Training Program"}
+                        alt={item.title || "InternovaTech Internship Programs"}
                         className="programs-v61-image"
                       />
                     </div>

@@ -504,7 +504,7 @@ function Dashboard() {
                 <div className="dashboard-feature-icon">🚀</div>
                 <h4 className="dashboard-feature-title">Programs</h4>
                 <p className="dashboard-feature-text">
-                  Browse domain-based Training Program with flexible durations,
+                  Browse domain-based Internship Programs with flexible durations,
                   guided learning paths, and a clean premium experience.
                 </p>
               </div>

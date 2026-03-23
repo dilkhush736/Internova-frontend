@@ -1420,7 +1420,7 @@ function AdminDashboard() {
           <div className="admin-section-card p-4 p-md-5 mb-4">
             <h3 className="admin-section-title">Recent Internships</h3>
             <p className="admin-section-subtitle">
-              Quickly review your latest created or updated Training Program.
+              Quickly review your latest created or updated Internship Programs.
             </p>
 
             <div className="row g-4">
