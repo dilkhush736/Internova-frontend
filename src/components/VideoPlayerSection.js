@@ -20,13 +20,12 @@ function VideoPlayerSection({
   const sentMilestonesRef = useRef(new Set());
   const completionToastShownRef = useRef(false);
   const completionHandledRef = useRef(false);
-  const nextCountdownIntervalRef = useRef(null);
   const lastSaveSecondRef = useRef(-1);
   const watchedSecondsRef = useRef(new Set());
+  const autoplayRetryTimerRef = useRef(null);
 
   const [localProgress, setLocalProgress] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
-  const [nextCountdown, setNextCountdown] = useState(0);
   const [isEligibleComplete, setIsEligibleComplete] = useState(false);
   const [toast, setToast] = useState({
     show: false,
@@ -60,6 +59,29 @@ function VideoPlayerSection({
     return `internova_video_watched_${selectedVideo.id}`;
   }, [selectedVideo?.id]);
 
+  const autoplayEmbedUrl = useMemo(() => {
+    if (!embeddedVideoUrl) return "";
+
+    try {
+      const url = new URL(embeddedVideoUrl);
+
+      if (isYouTubeVideo) {
+        url.searchParams.set("autoplay", "1");
+        url.searchParams.set("mute", "1");
+        url.searchParams.set("playsinline", "1");
+        url.searchParams.set("rel", "0");
+      }
+
+      if (isGoogleDriveVideo) {
+        url.searchParams.set("autoplay", "1");
+      }
+
+      return url.toString();
+    } catch (error) {
+      return embeddedVideoUrl;
+    }
+  }, [embeddedVideoUrl, isYouTubeVideo, isGoogleDriveVideo]);
+
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
     setTimeout(() => {
@@ -74,32 +96,6 @@ function VideoPlayerSection({
       "success",
       `${selectedVideo?.title || "Video"} completed successfully`
     );
-  };
-
-  const clearNextCountdown = () => {
-    if (nextCountdownIntervalRef.current) {
-      clearInterval(nextCountdownIntervalRef.current);
-      nextCountdownIntervalRef.current = null;
-    }
-    setNextCountdown(0);
-  };
-
-  const startNextCountdown = () => {
-    if (!hasNextVideo || !onNextVideo) return;
-
-    clearNextCountdown();
-    setNextCountdown(3);
-
-    let remaining = 3;
-    nextCountdownIntervalRef.current = setInterval(() => {
-      remaining -= 1;
-      setNextCountdown(remaining);
-
-      if (remaining <= 0) {
-        clearNextCountdown();
-        onNextVideo();
-      }
-    }, 1000);
   };
 
   const saveResumePosition = (seconds) => {
@@ -177,6 +173,35 @@ function VideoPlayerSection({
     }
   };
 
+  const clearAutoPlayRetry = () => {
+    if (autoplayRetryTimerRef.current) {
+      clearTimeout(autoplayRetryTimerRef.current);
+      autoplayRetryTimerRef.current = null;
+    }
+  };
+
+  const attemptDirectAutoplay = () => {
+    if (!isDirectVideo || !videoRef.current) return;
+
+    try {
+      const playPromise = videoRef.current.play();
+      if (playPromise?.catch) {
+        playPromise.catch(() => {
+          clearAutoPlayRetry();
+          autoplayRetryTimerRef.current = setTimeout(() => {
+            try {
+              videoRef.current?.play?.().catch?.(() => {});
+            } catch (error) {
+              console.error("Retry autoplay failed:", error);
+            }
+          }, 350);
+        });
+      }
+    } catch (error) {
+      console.error("Autoplay failed:", error);
+    }
+  };
+
   const formatDuration = (seconds = 0) => {
     const safe = Math.max(0, Math.floor(seconds));
     const hours = Math.floor(safe / 3600);
@@ -249,11 +274,10 @@ function VideoPlayerSection({
     return effectiveProgress;
   };
 
-  const handleCompletionFlow = () => {
+  const handleCompletionFlow = async () => {
     if (completionHandledRef.current) return;
     completionHandledRef.current = true;
 
-    clearNextCountdown();
     clearResumePosition();
     clearWatchedSeconds();
     setIsEligibleComplete(true);
@@ -261,11 +285,7 @@ function VideoPlayerSection({
     showCompletionToastOnce();
 
     if (onVideoEnded) {
-      onVideoEnded();
-    }
-
-    if (hasNextVideo) {
-      startNextCountdown();
+      await onVideoEnded();
     }
   };
 
@@ -274,14 +294,13 @@ function VideoPlayerSection({
 
     setLocalProgress(restoredProgress);
     setVideoDuration(0);
-    setNextCountdown(0);
     setIsEligibleComplete(restoredProgress >= requiredWatchPercent);
     completionToastShownRef.current = false;
     completionHandledRef.current = false;
     sentMilestonesRef.current = new Set();
     lastSaveSecondRef.current = -1;
     watchedSecondsRef.current = new Set();
-    clearNextCountdown();
+    clearAutoPlayRetry();
 
     milestoneSteps.forEach((step) => {
       if (restoredProgress >= step) {
@@ -290,9 +309,19 @@ function VideoPlayerSection({
     });
 
     return () => {
-      clearNextCountdown();
+      clearAutoPlayRetry();
     };
   }, [selectedVideo, milestoneSteps]);
+
+  useEffect(() => {
+    if (!selectedVideo || !isDirectVideo) return;
+
+    const timer = setTimeout(() => {
+      attemptDirectAutoplay();
+    }, 220);
+
+    return () => clearTimeout(timer);
+  }, [selectedVideo, isDirectVideo]);
 
   const syncRestoredState = (duration) => {
     if (!duration || duration <= 0) return;
@@ -317,6 +346,11 @@ function VideoPlayerSection({
     const duration = videoRef.current?.duration || 0;
     setVideoDuration(duration);
     syncRestoredState(duration);
+    attemptDirectAutoplay();
+  };
+
+  const handleCanPlay = () => {
+    attemptDirectAutoplay();
   };
 
   const handleTimeUpdate = () => {
@@ -337,14 +371,14 @@ function VideoPlayerSection({
     updateProgressState(video.duration);
   };
 
-  const handleEndedInternal = () => {
+  const handleEndedInternal = async () => {
     const video = videoRef.current;
     const duration = video?.duration || videoDuration || 0;
     const effectiveProgress = updateProgressState(duration);
 
     if (effectiveProgress >= requiredWatchPercent) {
       pushTrackedMilestone(100);
-      handleCompletionFlow();
+      await handleCompletionFlow();
     } else {
       showToast(
         "error",
@@ -376,8 +410,16 @@ function VideoPlayerSection({
     <div className="video-player-card premium-video-card position-relative">
       {toast.show && (
         <div className="video-toast-container">
-          <div className={`video-toast-box ${toast.type === "success" ? "success" : "error"}`}>
-            <div className={`video-toast-title ${toast.type === "success" ? "success" : "error"}`}>
+          <div
+            className={`video-toast-box ${
+              toast.type === "success" ? "success" : "error"
+            }`}
+          >
+            <div
+              className={`video-toast-title ${
+                toast.type === "success" ? "success" : "error"
+              }`}
+            >
               {toast.type === "success" ? "Success" : "Error"}
             </div>
             <div className="video-toast-message">{toast.message}</div>
@@ -385,10 +427,12 @@ function VideoPlayerSection({
         </div>
       )}
 
-      <div className="video-progress-summary-card">
+      <div className="video-progress-summary-card premium-summary-card">
         <div className="video-progress-summary-top">
           <div>
-            <div className="video-progress-summary-label">Smart Progress Tracking</div>
+            <div className="video-progress-summary-label">
+              Smart Progress Tracking
+            </div>
             <div className="video-progress-summary-title">
               Verified Segment Progress: {localProgress}%
             </div>
@@ -400,10 +444,8 @@ function VideoPlayerSection({
                 isEligibleComplete ? "completed" : "progress"
               }`}
             >
-              {isEligibleComplete ? "Completion Unlocked" : "Still Watching"}
+              {isEligibleComplete ? "Completed" : "Watching"}
             </span>
-
-            <span className="video-status-badge neutral">4 Smart Segments</span>
           </div>
         </div>
 
@@ -418,10 +460,14 @@ function VideoPlayerSection({
 
         <div className="video-progress-summary-bottom">
           <small>
-            Mode: {isDirectVideo ? "Direct Video Verified Tracking" : "Embedded Playback"}
+            {isDirectVideo
+              ? "Protected direct playback"
+              : "Embedded playback mode"}
           </small>
           <small>
-            {videoDuration ? `Duration: ${formatDuration(videoDuration)}` : "Duration loading..."}
+            {videoDuration
+              ? `Duration: ${formatDuration(videoDuration)}`
+              : "Duration loading..."}
           </small>
         </div>
       </div>
@@ -434,7 +480,7 @@ function VideoPlayerSection({
           <div className="video-frame-shell">
             <iframe
               key={selectedVideo.id}
-              src={embeddedVideoUrl}
+              src={autoplayEmbedUrl}
               title={selectedVideo.title || "Course Video"}
               className="internova-video-player video-embed-frame"
               allow={
@@ -452,12 +498,17 @@ function VideoPlayerSection({
               ref={videoRef}
               key={selectedVideo.id}
               controls
+              autoPlay
+              playsInline
+              muted={false}
+              preload="auto"
               controlsList="nodownload noplaybackrate"
               disablePictureInPicture
               onContextMenu={handlePreventContextMenu}
               className="internova-video-player video-direct-player"
               src={rawVideoUrl}
               onLoadedMetadata={handleLoadedMetadata}
+              onCanPlay={handleCanPlay}
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleEndedInternal}
             >
@@ -466,41 +517,6 @@ function VideoPlayerSection({
           </div>
         )}
       </div>
-
-      <div className="video-player-controls-note premium-chip-row">
-        {isDirectVideo ? (
-          <>
-            <div className="player-feature-chip">Segment Tracking</div>
-            <div className="player-feature-chip">Seek Safe</div>
-            <div className="player-feature-chip">Resume Enabled</div>
-            <div className="player-feature-chip">Professional Mode</div>
-          </>
-        ) : (
-          <>
-            <div className="player-feature-chip">Embed Playback</div>
-            <div className="player-feature-chip">Limited Tracking</div>
-          </>
-        )}
-
-        <div className="player-feature-chip">
-          {isGoogleDriveVideo
-            ? "Drive Player"
-            : isYouTubeVideo
-            ? "YouTube Embed"
-            : "Protected Player"}
-        </div>
-
-        <div className="player-feature-chip">
-          Complete {requiredWatchPercent}%+
-        </div>
-      </div>
-
-      {nextCountdown > 0 && hasNextVideo && (
-        <div className="video-next-countdown">
-          Next video starts in {nextCountdown} second
-          {nextCountdown > 1 ? "s" : ""}
-        </div>
-      )}
 
       <div className="video-player-actions premium-video-actions">
         <button
@@ -530,17 +546,16 @@ function VideoPlayerSection({
         <div className="video-info-card premium-info-card">
           <h4>Topic Summary</h4>
           <p>
-            {selectedVideo.description} This section helps the learner focus on
-            the main concept before moving ahead.
+            {selectedVideo.description ||
+              "This lesson helps the learner focus on the main concept before moving ahead."}
           </p>
         </div>
 
         <div className="video-info-card premium-info-card">
           <h4>Verification Rule</h4>
           <p>
-            This player uses segment-based verification. Simply jumping to the
-            end does not complete the topic unless enough video segments were
-            genuinely covered.
+            This player uses segment-based verification, so only real watched
+            coverage counts toward completion.
           </p>
         </div>
 
@@ -548,8 +563,8 @@ function VideoPlayerSection({
           <h4>Tracking Mode</h4>
           <p>
             {isDirectVideo
-              ? "Direct video uses smart 4-segment progress validation with resume support."
-              : "Embedded playback works, but exact segment validation is not supported for iframe-based sources."}
+              ? "Direct video uses smart progress validation, resume support, and automatic next video flow."
+              : "Embedded playback works, but strict auto-detection depends on the platform restrictions."}
           </p>
         </div>
 
@@ -558,7 +573,7 @@ function VideoPlayerSection({
           <p>
             {isEligibleComplete
               ? "This topic has reached the required verified watch threshold."
-              : `Current verified segment completion is ${localProgress}%. Continue naturally to complete this lesson.`}
+              : `Current verified completion is ${localProgress}%. Continue watching naturally to complete this lesson.`}
           </p>
         </div>
       </div>
@@ -566,10 +581,10 @@ function VideoPlayerSection({
       <div className="video-player-feature-note premium-feature-note">
         <p>
           {isDirectVideo
-            ? "Dear learner! you will have to completely watch all video, Progress depends on watched coverage instead of just dragging the seekbar."
+            ? "Watch the lesson naturally for the best experience. Seekbar dragging alone does not complete progress."
             : isYouTubeVideo
-            ? "YouTube is running in embedded mode. Playback works, but strict segment verification is not supported with iframe sources."
-            : "Google Drive is running in embedded mode. Playback works, but strict segment verification is not supported with iframe sources."}
+            ? "YouTube is running in embed mode, so autoplay and end-detection may vary depending on browser rules."
+            : "Google Drive is running in embed mode, so autoplay and end-detection may vary depending on browser rules."}
         </p>
       </div>
     </div>

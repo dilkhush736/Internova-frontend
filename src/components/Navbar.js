@@ -1240,7 +1240,7 @@ function Navbar() {
                         onClick={closeMobileMenu}
                       >
                         <FaLayerGroup className="internovatech-nav-icon" />
-                        <span>Programs</span>
+                        <span>Trainings</span>
                       </Link>
                     </li>
 

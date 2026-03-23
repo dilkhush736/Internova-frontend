@@ -45,6 +45,7 @@ function CourseProgress() {
   const [loading, setLoading] = useState(true);
   const [unlockingAll, setUnlockingAll] = useState(false);
   const [error, setError] = useState("");
+  const [videoPlayerKey, setVideoPlayerKey] = useState(0);
   const [toast, setToast] = useState({
     show: false,
     type: "success",
@@ -212,14 +213,23 @@ function CourseProgress() {
 
     if (!hasValidSelection) {
       const firstAvailable = getFirstAvailableVideo(derivedData.unlockedModules);
-      setSelectedModule(firstAvailable.module);
-      setSelectedVideo(firstAvailable.video);
+      if (firstAvailable?.module && firstAvailable?.video) {
+        setSelectedModule(firstAvailable.module);
+        setSelectedVideo(firstAvailable.video);
+        setVideoPlayerKey((prev) => prev + 1);
+      }
     }
   }, [derivedData, selectedModule, selectedVideo]);
 
-  const handleSelectVideo = (module, video) => {
+  const switchToVideo = (module, video) => {
+    if (!module || !video) return;
     setSelectedModule(module);
     setSelectedVideo(video);
+    setVideoPlayerKey((prev) => prev + 1);
+  };
+
+  const handleSelectVideo = (module, video) => {
+    switchToVideo(module, video);
   };
 
   const handlePreviousVideo = () => {
@@ -231,8 +241,7 @@ function CourseProgress() {
 
     if (currentIndex > 0) {
       const previousItem = derivedData.allUnlockedVideos[currentIndex - 1];
-      setSelectedModule(previousItem.module);
-      setSelectedVideo(previousItem.video);
+      switchToVideo(previousItem.module, previousItem.video);
     }
   };
 
@@ -248,8 +257,7 @@ function CourseProgress() {
       currentIndex < derivedData.allUnlockedVideos.length - 1
     ) {
       const nextItem = derivedData.allUnlockedVideos[currentIndex + 1];
-      setSelectedModule(nextItem.module);
-      setSelectedVideo(nextItem.video);
+      switchToVideo(nextItem.module, nextItem.video);
     }
   };
 
@@ -301,13 +309,16 @@ function CourseProgress() {
   };
 
   const handleVideoEnded = async () => {
-    if (!selectedVideo || !selectedModule || !derivedData?.unlockedModules?.length)
+    if (!selectedVideo || !selectedModule || !derivedData?.unlockedModules?.length) {
       return;
+    }
 
     try {
+      const currentVideoId = selectedVideo.id;
+
       const response = await updateVideoProgress(internshipId, {
         moduleId: selectedModule.id || selectedModule._id,
-        videoId: selectedVideo.id,
+        videoId: currentVideoId,
         watchedPercent: 100,
       });
 
@@ -315,16 +326,17 @@ function CourseProgress() {
         throw new Error(response?.message || "Failed to update video progress");
       }
 
-      setModules((prev) => markVideoProgress(prev, selectedVideo.id, 100));
+      setModules((prev) => markVideoProgress(prev, currentVideoId, 100));
 
       const nextItem = getNextVideoItem(
         derivedData.unlockedModules,
-        selectedVideo.id
+        currentVideoId
       );
 
-      if (nextItem) {
-        setSelectedModule(nextItem.module);
-        setSelectedVideo(nextItem.video);
+      if (nextItem?.module && nextItem?.video) {
+        setTimeout(() => {
+          switchToVideo(nextItem.module, nextItem.video);
+        }, 250);
       }
     } catch (err) {
       console.error("Video end progress update failed:", err);
@@ -342,6 +354,7 @@ function CourseProgress() {
       );
       return;
     }
+
     navigate(`/quiz/${internshipId}`);
   };
 
@@ -432,9 +445,9 @@ function CourseProgress() {
     }
   };
 
- if (loading) {
-  return <BrandLoader title="Loading programs" />;
-}
+  if (loading) {
+    return <BrandLoader title="Loading programs" />;
+  }
 
   if (error || !course || !derivedData) {
     return (
@@ -464,9 +477,25 @@ function CourseProgress() {
     );
   }
 
+  const selectedVideoIndex = derivedData?.allUnlockedVideos?.findIndex(
+    (item) => item.video.id === selectedVideo?.id
+  );
+
   return (
     <div className="course-progress-shell position-relative">
       <style>{`
+        .course-progress-shell {
+          width: 100%;
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
+        .course-progress-page.full-width-course-page {
+          width: 100%;
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
         .course-page-toast {
           position: fixed;
           top: 92px;
@@ -514,6 +543,42 @@ function CourseProgress() {
           line-height: 1.6;
         }
 
+        .course-learning-layout.left-sidebar-layout {
+          display: flex;
+          align-items: flex-start;
+          gap: 24px;
+          width: 100%;
+          min-width: 0;
+        }
+
+        .course-learning-layout.left-sidebar-layout > * {
+          min-width: 0;
+        }
+
+        .course-learning-layout.left-sidebar-layout > :first-child {
+          flex: 0 0 360px;
+          max-width: 360px;
+          width: 100%;
+          min-width: 0;
+        }
+
+        .course-learning-layout.left-sidebar-layout > :last-child {
+          flex: 1 1 auto;
+          width: 100%;
+          min-width: 0;
+        }
+
+        @media (max-width: 991px) {
+          .course-learning-layout.left-sidebar-layout {
+            gap: 18px;
+          }
+
+          .course-learning-layout.left-sidebar-layout > :first-child {
+            flex-basis: 320px;
+            max-width: 320px;
+          }
+        }
+
         @media (max-width: 767px) {
           .course-page-toast {
             left: 14px;
@@ -521,6 +586,23 @@ function CourseProgress() {
             top: 86px;
             min-width: auto;
             max-width: none;
+          }
+
+          .course-learning-layout.left-sidebar-layout {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 16px;
+          }
+
+          .course-learning-layout.left-sidebar-layout > :first-child,
+          .course-learning-layout.left-sidebar-layout > :last-child {
+            flex: 1 1 100%;
+            max-width: 100%;
+            width: 100%;
+          }
+
+          .course-actions-grid {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>
@@ -575,6 +657,7 @@ function CourseProgress() {
           />
 
           <VideoPlayerSection
+            key={`${selectedVideo?.id || "video"}-${videoPlayerKey}`}
             selectedModule={selectedModule}
             selectedVideo={selectedVideo}
             onPreviousVideo={handlePreviousVideo}
@@ -582,11 +665,7 @@ function CourseProgress() {
             onTrackedProgress={handleTrackedProgress}
             onMarkDemoProgress={handleMarkDemoProgress}
             onVideoEnded={handleVideoEnded}
-            hasPreviousVideo={
-              derivedData?.allUnlockedVideos?.findIndex(
-                (item) => item.video.id === selectedVideo?.id
-              ) > 0
-            }
+            hasPreviousVideo={selectedVideoIndex > 0}
             hasNextVideo={Boolean(derivedData?.nextVideoItem)}
           />
         </div>
@@ -594,7 +673,9 @@ function CourseProgress() {
         <div className="course-actions-grid">
           <MiniTestActionCard
             progress={derivedData.overallProgress}
-            requiredProgress={course.miniTestUnlockProgress || course.requiredProgress}
+            requiredProgress={
+              course.miniTestUnlockProgress || course.requiredProgress
+            }
             miniTestPassed={course.miniTestPassed}
             onOpenMiniTest={handleOpenMiniTest}
           />
